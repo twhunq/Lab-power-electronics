@@ -1,0 +1,14 @@
+# Hệ điều hành / OneDrive
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+
+# Công cụ
+node_modules/
+.vercel/
+*.log
+
+# Biến môi trường
+.env
+.env.*

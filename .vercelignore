@@ -1,6 +1,13 @@
-# file hệ thống / OneDrive – không cần đưa lên
+# file hệ thống / OneDrive
 .DS_Store
 Thumbs.db
 desktop.ini
 *.tmp
-DEPLOY.md
+
+# tài liệu và cấu hình repo, không cần cho trang chạy
+docs/
+README.md
+LICENSE
+.editorconfig
+.gitattributes
+.gitignore
