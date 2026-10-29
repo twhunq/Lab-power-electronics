@@ -1,0 +1,6 @@
+# file hệ thống / OneDrive – không cần đưa lên
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+DEPLOY.md

@@ -1,0 +1,2305 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Phòng Lab ĐTCS 3D</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect width=%2724%27 height=%2724%27 rx=%275%27 fill=%27%231959d1%27/%3E%3Cpath d=%27M3 12h3l2-6 4 12 3-9 2 3h4%27 fill=%27none%27 stroke=%27white%27 stroke-width=%271.8%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E">
+<meta name="description" content="Phòng thí nghiệm Điện tử công suất 3D: luyện cắm mạch Bài 7, 8, 9 trên các module PE-801, PE-803, PE-803A, PE-805.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Xanh dương – trắng kiểu bản vẽ kỹ thuật. Đỏ/xanh lá/cam chỉ dùng cho trạng thái (sai / đúng / cảnh báo). */
+:root{
+  --paper:#ffffff; --paper2:#f4f7fc; --bg:#e9eef6;
+  --ink:#0d1b2e; --ink2:#4b5d76; --ink3:#8a99ae;
+  --rule:#dde5f0; --rule2:#c6d3e4;
+  --blue:#1959d1; --blue-d:#0b3a8c; --blue-l:#e8f0fd; --blue-m:#a9c3f3;
+  --ok:#0f9d63; --warn:#c27a00; --err:#d23a3a;
+  /* tên cũ – nguyen-ly.js vẫn dùng */
+  --text:var(--ink); --muted:var(--ink2); --accent:var(--blue); --line:var(--rule); --panel:var(--paper); --panel2:var(--paper2);
+  --f-display:"Chakra Petch","Segoe UI",sans-serif;
+  --f-body:"Be Vietnam Pro","Segoe UI",Roboto,Arial,sans-serif;
+  --f-mono:"JetBrains Mono",Consolas,monospace;
+  --shadow:0 1px 2px #0d1b2e14,0 8px 24px #0d1b2e1f;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --tab:0px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.5 var(--f-body);overflow:hidden;-webkit-tap-highlight-color:transparent}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+kbd{font:500 10.5px var(--f-mono);background:var(--paper2);border:1px solid var(--rule2);border-bottom-width:2px;border-radius:4px;padding:0 4px;color:var(--ink2)}
+.ic{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.eyebrow{font:600 11px var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin:0 0 8px}
+
+#app{position:relative;height:100vh;height:100dvh}
+#stage{--tb:56px;position:absolute;inset:0;overflow:hidden}
+#c3d{display:block;width:100%;height:100%;touch-action:none}
+
+/* ---------- nút chung ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--paper);border:1px solid var(--rule2);border-radius:8px;padding:8px 12px;color:var(--ink);font-size:13px;font-weight:500;white-space:nowrap;transition:background .15s,border-color .15s,color .15s,transform .1s}
+.btn:hover:not(:disabled){border-color:var(--blue);color:var(--blue)}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
+.btn.primary:hover:not(:disabled){background:var(--blue-d);border-color:var(--blue-d);color:#fff}
+.btn.primary kbd{background:#ffffff26;border-color:#ffffff55;color:#fff}
+.btn.danger:hover:not(:disabled){border-color:var(--err);color:var(--err)}
+.btn.icon{padding:8px;width:38px}
+.btn.on{background:var(--blue);border-color:var(--blue);color:#fff}
+
+/* ---------- thanh trên ---------- */
+#topbar{position:absolute;left:0;right:0;top:0;z-index:6;display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:20px;padding:9px 14px;background:#ffffffeb;border-bottom:1px solid var(--rule);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.tb-left{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{flex:none;width:34px;height:34px;border-radius:8px;background:var(--blue);color:#fff;display:grid;place-items:center}
+.logo .ic{width:20px;height:20px;stroke-width:1.8}
+#modeChip{flex:none;display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 11px;border-radius:999px;border:1px solid var(--blue-m);background:var(--blue-l);color:var(--blue-d);font:600 12px var(--f-display);letter-spacing:.08em;text-transform:uppercase;transition:background .15s}
+#modeChip:hover{background:#dbe7fc}
+#modeChip i{width:7px;height:7px;border-radius:50%;background:var(--blue)}
+body.exam #modeChip{border-color:#f0c98a;background:#fff6e6;color:#8a5600}
+body.exam #modeChip i{background:var(--warn)}
+#exTop{min-width:0;border:none;background:none;padding:4px 6px;border-radius:6px;display:flex;align-items:center;gap:6px;font:600 15px var(--f-display);letter-spacing:.01em;color:var(--ink)}
+#exTop:hover{background:var(--paper2)}
+#exTitleTop{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#exTop .ic{width:14px;height:14px;color:var(--ink3)}
+.prog{width:250px}
+.bar{height:8px;border-radius:2px;overflow:hidden;background:repeating-linear-gradient(90deg,var(--rule) 0 8px,transparent 8px 10px)}
+.bar i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--blue) 0 8px,transparent 8px 10px);transition:width .5s var(--ease)}
+.progTxt{display:flex;justify-content:space-between;gap:8px;font:500 11.5px var(--f-mono);color:var(--ink2);margin-top:5px}
+.tb-right{display:flex;align-items:center;gap:12px}
+#wireCount{font:500 12px var(--f-mono);color:var(--ink2);white-space:nowrap}
+
+/* công tắc nguồn: đèn báo + vỏ trắng */
+#power{display:inline-flex;align-items:center;gap:10px;height:38px;padding:0 16px 0 12px;border-radius:999px;border:1px solid var(--rule2);background:var(--paper);color:var(--ink);font:700 12.5px var(--f-display);letter-spacing:.1em;text-transform:uppercase;transition:background .25s,border-color .25s,color .25s,box-shadow .25s}
+#power::before{content:'';width:11px;height:11px;border-radius:50%;background:#c8d2df;box-shadow:inset 0 1px 2px #0003;transition:background .25s,box-shadow .25s}
+#power:hover{border-color:var(--blue)}
+#power.on{background:var(--blue-d);border-color:var(--blue-d);color:#fff;box-shadow:0 0 0 4px #1959d126}
+#power.on::before{background:#7fe7ff;box-shadow:0 0 0 2px #ffffff40,0 0 10px 2px #7fe7ffcc;animation:led 1.6s ease-in-out infinite}
+@keyframes led{50%{box-shadow:0 0 0 2px #ffffff40,0 0 16px 5px #7fe7ff88}}
+
+/* ---------- thanh công cụ dọc ---------- */
+#rail{position:absolute;left:12px;top:calc(var(--tb) + 12px);z-index:5;display:flex;flex-direction:column;gap:2px;padding:6px;background:var(--paper);border:1px solid var(--rule);border-radius:12px;box-shadow:var(--shadow)}
+#rail button{position:relative;width:42px;height:42px;border:none;background:none;border-radius:8px;display:grid;place-items:center;color:var(--ink2);transition:background .15s,color .15s}
+#rail button .ic{width:20px;height:20px}
+#rail button:hover:not(:disabled){background:var(--paper2);color:var(--blue)}
+#rail button.on{background:var(--blue-l);color:var(--blue)}
+#rail button.on::before{content:'';position:absolute;left:-6px;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:var(--blue);animation:grow .2s var(--ease)}
+@keyframes grow{from{transform:scaleY(0)}}
+#rail button:disabled{opacity:.3;cursor:not-allowed}
+#rail .rl{position:absolute;left:calc(100% + 12px);top:50%;transform:translate(-4px,-50%);white-space:nowrap;background:var(--ink);color:#fff;font-size:12px;font-weight:500;padding:4px 9px;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .15s,transform .15s}
+#rail button:hover .rl,#rail button:focus-visible .rl{opacity:1;transform:translate(0,-50%)}
+#rail hr{border:none;border-top:1px solid var(--rule);margin:4px 6px}
+
+/* ---------- bảng nổi: chỉ hiện khi bấm ---------- */
+.pnl{opacity:0;visibility:hidden;transform:translateX(-12px) scale(.985);transform-origin:left top;transition:opacity .2s,transform .28s var(--ease),visibility 0s .28s}
+.pnl.show{opacity:1;visibility:visible;transform:none;transition-delay:0s}
+.drawer{position:absolute;left:80px;top:calc(var(--tb) + 12px);width:360px;max-height:calc(100% - var(--tb) - 100px);z-index:5;display:flex;flex-direction:column;background:var(--paper);border:1px solid var(--rule);border-radius:12px;box-shadow:var(--shadow)}
+.ph{display:flex;align-items:center;gap:8px;padding:12px 10px 10px 16px;border-bottom:1px solid var(--rule)}
+.ph h3{margin:0 auto 0 0;font:600 12px var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
+.ph .btn{padding:5px;width:30px;height:30px;border-color:transparent}
+.pb{padding:14px 16px 16px;overflow-y:auto;min-height:0;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--rule2) transparent}
+
+select{width:100%;appearance:none;-webkit-appearance:none;background:var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%234b5d76' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 12px center;border:1px solid var(--rule2);border-radius:8px;padding:10px 34px 10px 12px;font-weight:500;cursor:pointer;color:var(--ink)}
+select:hover{border-color:var(--blue)}
+
+.moderow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:14px;font-size:13px}
+.moderow b{font-weight:600}
+.link{border:none;background:none;color:var(--blue);font-weight:600;font-size:13px;padding:2px 0}
+.link:hover{text-decoration:underline}
+.tgl{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:13px;cursor:pointer;user-select:none}
+.tgl input{appearance:none;-webkit-appearance:none;flex:none;width:34px;height:20px;border-radius:999px;background:var(--rule2);position:relative;cursor:pointer;transition:background .2s;margin:0}
+.tgl input::after{content:'';position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px #0003;transition:transform .2s var(--ease)}
+.tgl input:checked{background:var(--blue)}
+.tgl input:checked::after{transform:translateX(14px)}
+body.exam .tgl{display:none}
+.modeDesc{font-size:12.5px;color:var(--ink2);margin:8px 0 0}
+
+#next{margin-top:14px;background:var(--blue-l);border:1px solid var(--blue-m);border-radius:10px;padding:10px 12px;font-size:13px;display:none;animation:rise .3s var(--ease)}
+#next b{color:var(--blue-d);font-weight:600} #next small{color:var(--ink2)}
+#next .btn{margin-top:8px;margin-right:4px;padding:5px 10px;font-size:12px}
+
+.sheet{margin-top:16px;padding-top:14px;border-top:1px dashed var(--rule2)}
+#exTitle{font:600 16px/1.3 var(--f-display);margin:0 0 4px}
+.goal{color:var(--ink2);margin:0 0 6px;font-size:13px}
+details summary{cursor:pointer;font-weight:600;margin:12px 0 6px;list-style:none;display:flex;align-items:center;gap:8px;font-size:13.5px}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:'';width:6px;height:6px;border-right:1.7px solid var(--ink2);border-bottom:1.7px solid var(--ink2);transform:rotate(-45deg);transition:transform .2s}
+details[open] summary::before{transform:rotate(45deg)}
+ol.steps{margin:4px 0 0;padding:0;list-style:none;counter-reset:st}
+ol.steps li{counter-increment:st;position:relative;padding:5px 0 5px 32px;font-size:13px}
+ol.steps li::before{content:counter(st);position:absolute;left:0;top:5px;width:22px;height:22px;border-radius:6px;border:1px solid var(--blue-m);display:grid;place-items:center;font:600 11px var(--f-mono);color:var(--blue-d);background:var(--blue-l)}
+#side.show ol.steps li{animation:rise .35s var(--ease) both}
+#side.show ol.steps li:nth-child(2){animation-delay:.03s} #side.show ol.steps li:nth-child(3){animation-delay:.06s}
+#side.show ol.steps li:nth-child(4){animation-delay:.09s} #side.show ol.steps li:nth-child(5){animation-delay:.12s}
+#side.show ol.steps li:nth-child(n+6){animation-delay:.15s}
+.note{background:var(--paper2);border-left:3px solid var(--blue);padding:8px 12px;border-radius:6px;color:var(--ink);font-size:12.5px;margin-top:12px}
+.note:empty{display:none}
+.exam-note{display:none;margin:12px 0 0;padding:9px 12px;border-radius:8px;background:#fff6e6;border:1px solid #f0c98a;color:#7a4c00;font-size:12.5px}
+body.exam .exam-note{display:block}
+body.exam #side details,body.exam #exNote,body.exam #next{display:none!important}
+
+.knob{margin:4px 0 14px}
+.knob label{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:6px}
+.knob label b{font:600 13px var(--f-mono);color:var(--blue)}
+input[type=range]{width:100%;accent-color:var(--blue);height:22px;cursor:pointer;margin:0}
+
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;font:12px var(--f-mono);color:var(--ink2)}
+.stats span{background:var(--paper2);border-radius:6px;padding:6px 8px}
+#log{font-size:13px;display:flex;flex-direction:column;gap:6px;margin-top:14px}
+.msg{padding:7px 10px;border-radius:6px;background:var(--paper2);border-left:3px solid var(--rule2)}
+.msg.ok{border-color:var(--ok)} .msg.warn{border-color:var(--warn)} .msg.err{border-color:var(--err)} .msg.info{border-color:var(--blue)}
+.msg.link{cursor:pointer} .msg.link:hover{background:var(--blue-l)}
+#log .msg:first-child{animation:rise .3s var(--ease)}
+
+.views{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.views button{background:var(--paper);border:1px solid var(--rule2);border-radius:8px;padding:9px 10px;font-size:13px;text-align:left;color:var(--ink)}
+.views button:hover{border-color:var(--blue);color:var(--blue)}
+
+#help dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:13px}
+#help dt{font-weight:600}
+#help dd{margin:0;color:var(--ink2)}
+.touch-only{display:none!important}
+
+/* ---------- dải thao tác dưới ---------- */
+#dock{position:absolute;left:50%;bottom:calc(16px + var(--tab));transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:6px;padding:6px;background:var(--paper);border:1px solid var(--rule);border-radius:12px;box-shadow:var(--shadow);max-width:calc(100% - 24px)}
+#dock .sep{width:1px;height:24px;background:var(--rule);margin:0 4px}
+.dock-ext{display:flex;gap:6px}
+#moreBtn{display:none}
+body.exam #bHint,body.exam #bAnswer,body.exam #bWrong{display:none}
+.colorwrap{position:relative}
+#colorBtn .ic{width:14px;height:14px;color:var(--ink3)}
+.sw{width:20px;height:20px;border-radius:50%;cursor:pointer;box-shadow:inset 0 0 0 1px #0d1b2e33,inset 0 0 0 4px #ffffff40;outline:2px solid transparent;outline-offset:2px;transition:outline-color .15s,transform .15s}
+.sw:hover{transform:scale(1.1)}
+.sw.sel{outline-color:var(--blue)}
+.sw.auto{background:conic-gradient(#d8312b,#f2c318,#1f9b4c,#2463c9,#d8312b);display:grid;place-items:center;font:700 9px var(--f-mono);color:#fff}
+#colorDot{width:16px;height:16px;cursor:inherit;outline:none}
+#colorDot:hover{transform:none}
+#colorPop{position:absolute;bottom:calc(100% + 12px);left:50%;translate:-50% 0;transform-origin:center bottom;transform:translateY(8px) scale(.97);background:var(--paper);border:1px solid var(--rule);border-radius:12px;box-shadow:var(--shadow);padding:12px 14px;white-space:nowrap}
+#colorPop.show{transform:none}
+#swatches{display:flex;gap:9px}
+
+/* ---------- lớp phủ trên sân khấu ---------- */
+#banner{position:absolute;left:50%;top:calc(var(--tb) + 12px);transform:translateX(-50%);z-index:4;display:none;max-width:min(720px,calc(100% - 180px));padding:8px 16px;border-radius:999px;background:var(--paper);border:1px solid var(--rule2);box-shadow:var(--shadow);font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;animation:drop .3s var(--ease)}
+#banner.guide{background:var(--blue);border-color:var(--blue);color:#fff}
+#banner.bad{background:#fff;border-color:var(--err);color:var(--err)}
+@keyframes drop{from{opacity:0;transform:translate(-50%,-8px)}}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}}
+#wireAct{position:absolute;left:50%;top:calc(var(--tb) + 58px);transform:translateX(-50%);z-index:4;display:none;align-items:center;gap:10px;padding:5px 5px 5px 14px;border-radius:999px;background:var(--paper);border:1px solid var(--rule2);box-shadow:var(--shadow);font-size:13px;max-width:calc(100% - 24px)}
+#wireAct.show{display:flex;animation:drop .25s var(--ease)}
+#wireAct span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink2)}
+#wireAct .btn{border-radius:999px;padding:6px 12px}
+#toast{position:absolute;left:50%;top:calc(var(--tb) + 104px);transform:translateX(-50%);z-index:9;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;width:min(520px,calc(100% - 24px))}
+#toast .msg{background:var(--paper);box-shadow:var(--shadow);font-size:13.5px;animation:drop2 .3s var(--ease)}
+@keyframes drop2{from{opacity:0;transform:translateY(-8px)}}
+#tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;padding:5px 9px;border-radius:6px;font-size:12px;display:none;white-space:nowrap;z-index:10}
+
+/* cửa sổ thiết bị */
+.win{position:absolute;z-index:5;display:flex;flex-direction:column;background:var(--paper);border:1px solid var(--rule);border-radius:12px;box-shadow:var(--shadow);padding:0 10px 10px}
+.win .hd{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2);margin:0 -10px 10px;padding:8px 8px 8px 14px;border-bottom:1px solid var(--rule);cursor:move;flex-wrap:wrap;user-select:none;-webkit-user-select:none;touch-action:none}
+.win .hd b{font:600 12px var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);margin-right:auto}
+.win .hd .btn{padding:4px;min-width:30px;height:30px;font-size:12px}
+.win .hd select{width:auto;padding:4px 22px 4px 8px;font:12px var(--f-mono);border-radius:6px;background-position:right 7px center;background-size:9px}
+#scopeBox{right:12px;bottom:calc(84px + var(--tab));width:min(480px,calc(100% - 24px));transform-origin:right bottom}
+#scopeBox .hd{flex-wrap:nowrap}
+#scopeBox .ctl{display:flex;gap:6px;align-items:center;font:11px var(--f-mono)}
+#scope{width:100%;aspect-ratio:3/2;display:block;border-radius:6px;background:#06101f}
+#meters{display:flex;gap:18px;font:12px var(--f-mono);color:var(--ink2);margin-top:8px}
+#meters b{color:var(--blue-d)}
+#schBox{left:80px;top:calc(var(--tb) + 12px);width:min(640px,calc(50% - 92px),calc(100% - 92px));height:min(480px,calc(100% - var(--tb) - 100px));min-width:260px;min-height:180px;resize:both;overflow:hidden}
+#schTabs{display:flex;gap:4px}
+#schTabs button.on{background:var(--blue);border-color:var(--blue);color:#fff}
+#schView{flex:1;overflow:auto;background:#fff;border:1px solid var(--rule);border-radius:6px;cursor:zoom-in}
+#schView.big{cursor:zoom-out}
+#schView img{display:block;margin:auto;max-width:none}
+#schCap{font-size:12px;color:var(--ink2);margin-top:8px}
+#prinBox{right:12px;top:calc(var(--tb) + 12px);width:min(600px,calc(100% - 24px));height:min(640px,calc(100% - var(--tb) - 100px));min-width:300px;min-height:360px;resize:both;overflow:hidden;transform-origin:right top}
+#prinBox .hd select{width:auto}
+
+/* kết quả */
+#result{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#0d1b2e59;backdrop-filter:blur(4px);z-index:12;padding:16px}
+#result .card{background:var(--paper);border-radius:16px;padding:28px 24px 20px;width:min(420px,100%);text-align:center;box-shadow:0 30px 60px #0d1b2e40;animation:pop .35s var(--ease)}
+@keyframes pop{from{opacity:0;transform:scale(.94) translateY(10px)}}
+#result h2{margin:0 0 2px;font:700 20px var(--f-display);letter-spacing:.02em}
+#result .score{font:600 56px/1 var(--f-mono);color:var(--blue);margin:14px 0 2px}
+#result .score small{font-size:18px;color:var(--ink3)}
+#result .stats{margin:14px 0 18px;text-align:left}
+#result .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* ---------- màn hình chọn chế độ: giấy kẻ ô bản vẽ ---------- */
+#startScr{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;overflow-y:auto;
+  background:linear-gradient(#1959d10f 1px,transparent 1px) 0 0/24px 24px,linear-gradient(90deg,#1959d10f 1px,transparent 1px) 0 0/24px 24px,linear-gradient(#1959d11c 1px,transparent 1px) 0 0/120px 120px,linear-gradient(90deg,#1959d11c 1px,transparent 1px) 0 0/120px 120px,#f7f9fdf2;
+  opacity:0;visibility:hidden;transition:opacity .35s,visibility 0s .35s}
+#startScr.show{opacity:1;visibility:visible;transition-delay:0s}
+.start-card{width:min(760px,100%);background:var(--paper);border:1px solid var(--rule);border-radius:18px;box-shadow:0 30px 70px #0d1b2e26;padding:32px 32px 26px}
+#startScr.show .start-card{animation:pop .5s var(--ease)}
+.start-card .logo{width:42px;height:42px;border-radius:10px;margin-bottom:18px}
+.start-card .logo .ic{width:24px;height:24px}
+.start-card h1{font:700 26px/1.2 var(--f-display);letter-spacing:.01em;margin:0 0 6px}
+.start-card .sub{color:var(--ink2);margin:0 0 22px}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mode-opt{position:relative;text-align:left;background:var(--paper);border:1.5px solid var(--rule2);border-radius:14px;padding:18px 18px 16px;transition:border-color .2s,box-shadow .2s,transform .2s var(--ease)}
+#startScr.show .mode-opt{animation:rise .5s var(--ease) both}
+#startScr.show .mode-opt+.mode-opt{animation-delay:.08s}
+.mode-opt:hover{border-color:var(--blue-m);transform:translateY(-2px)}
+.mode-opt.on{border-color:var(--blue);box-shadow:0 0 0 4px #1959d11f}
+.mode-opt .mo-ic{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:var(--blue-l);color:var(--blue);margin-bottom:12px}
+.mode-opt .mo-ic .ic{width:22px;height:22px}
+.mode-opt b{display:block;font:700 17px var(--f-display);margin-bottom:4px}
+.mode-opt p{margin:0;font-size:13px;color:var(--ink2)}
+.mode-opt ul{margin:10px 0 0;padding:0;list-style:none;font-size:12.5px;color:var(--ink)}
+.mode-opt li{display:flex;gap:8px;align-items:center;padding:2px 0}
+.mode-opt li .ic{width:14px;height:14px;color:var(--blue)}
+.mode-opt li.no .ic{color:var(--ink3)} .mode-opt li.no{color:var(--ink2)}
+.mode-opt .radio{position:absolute;right:16px;top:16px;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--rule2);transition:border .2s}
+.mode-opt.on .radio{border:6px solid var(--blue)}
+.start-foot{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;margin-top:22px}
+.start-foot label{display:block}
+#startGo{height:44px;padding:0 22px;font-size:14px}
+
+
+/* ---------- ô chọn tự vẽ (dropdown.js) ---------- */
+.dd-native{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;border:0!important;opacity:0;pointer-events:none;overflow:hidden;clip:rect(0 0 0 0)}
+.dd{display:flex;align-items:center;gap:10px;width:100%;min-width:0;text-align:left;background:var(--paper);border:1px solid var(--rule2);border-radius:8px;padding:9px 10px 9px 10px;color:var(--ink);font-weight:500;transition:border-color .15s,box-shadow .15s}
+.dd:hover{border-color:var(--blue)}
+.dd.open{border-color:var(--blue);box-shadow:0 0 0 3px #1959d126}
+.dd .dd-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dd .dd-ph{color:var(--ink3)}
+.dd>.ic:last-child{width:16px;height:16px;color:var(--ink3);transition:transform .22s var(--ease)}
+.dd.open>.ic:last-child{transform:rotate(180deg);color:var(--blue)}
+.dd-code{flex:none;min-width:48px;text-align:center;font:600 11.5px/1.5 var(--f-mono);color:var(--blue-d);background:var(--blue-l);border:1px solid var(--blue-m);border-radius:5px;padding:1px 6px}
+.dd-done{flex:none;width:20px;height:20px;border-radius:50%;background:#e2f5ec;color:var(--ok);display:grid;place-items:center}
+.dd-done .ic{width:12px;height:12px;stroke-width:2.6}
+.dd.dd-sm{display:inline-flex;width:auto;gap:6px;padding:0 7px 0 9px;height:30px;font:500 12px var(--f-mono);border-radius:6px}
+.dd.dd-sm>.ic:last-child{width:12px;height:12px}
+.dd-pop{position:fixed;z-index:60;display:flex;flex-direction:column;background:var(--paper);border:1px solid var(--rule);border-radius:12px;box-shadow:0 2px 4px #0d1b2e12,0 20px 48px #0d1b2e2e;overflow:hidden;color:var(--ink);font:14px/1.45 var(--f-body);opacity:0;transform:translateY(-6px) scale(.985);transform-origin:top center;transition:opacity .16s,transform .22s var(--ease)}
+.dd-pop.up{transform-origin:bottom center;transform:translateY(6px) scale(.985)}
+.dd-pop.in{opacity:1;transform:none}
+.dd-search{flex:none;display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--rule)}
+.dd-search .ic{color:var(--ink3)}
+.dd-search input{flex:1;min-width:0;border:none;outline:none;background:none;font-size:14px;color:var(--ink);padding:0}
+.dd-search input::placeholder{color:var(--ink3)}
+.dd-count{flex:none;font:500 11px var(--f-mono);color:var(--ink3)}
+.dd-list{position:relative;flex:1;min-height:0;overflow-y:auto;padding:4px 6px 6px;outline:none;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--rule2) transparent}
+.dd-group{position:sticky;top:-4px;z-index:1;display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:0 -6px;padding:12px 14px 6px;background:#fffffff2;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);font:600 10.5px var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
+.dd-group span{flex:none;font:500 10.5px var(--f-mono);letter-spacing:0;text-transform:none;color:var(--ok)}
+.dd-opt{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:8px;cursor:pointer;font-size:13.5px;transition:background .1s}
+.dd-opt .dd-name{flex:1;min-width:0}
+.dd-opt.act{background:var(--paper2)}
+.dd-opt.sel{background:var(--blue-l);color:var(--blue-d);font-weight:600}
+.dd-opt.sel .dd-code{background:var(--blue);border-color:var(--blue);color:#fff}
+.dd-opt.dis{opacity:.4;cursor:not-allowed}
+.dd-empty{padding:22px 16px;color:var(--ink2);font-size:13px;text-align:center}
+.dd-empty b{font-family:var(--f-mono);color:var(--blue-d)}
+.dd-pop.sm{border-radius:10px}
+.dd-pop.sm .dd-list{padding:4px}
+.dd-pop.sm .dd-opt{justify-content:space-between;padding:6px 8px;font:500 12.5px var(--f-mono);border-radius:6px}
+.dd-pop.sm .dd-opt .ic{width:13px;height:13px;color:var(--blue);stroke-width:2.2}
+.dd-backdrop{position:fixed;inset:0;z-index:59;background:#0d1b2e59;opacity:0;transition:opacity .22s}
+.dd-backdrop.in{opacity:1}
+.dd-pop.sheet{left:0;right:0;bottom:0;max-height:80vh;max-height:80dvh;border-radius:18px 18px 0 0;border-bottom:none;transform:translateY(100%);transition:opacity .2s,transform .32s var(--ease);padding-bottom:env(safe-area-inset-bottom)}
+.dd-pop.sheet.in{transform:none}
+.dd-pop.sheet::before{content:'';flex:none;display:block;width:38px;height:4px;border-radius:2px;background:var(--rule2);margin:8px auto 2px}
+.dd-pop.sheet .dd-opt{padding:11px 8px}
+.dd-pop.sheet .dd-search input{font-size:16px}
+
+/* ---------- máy tính bảng ---------- */
+@media (max-width:1100px){
+  .prog{width:180px}
+  #wireCount{display:none}
+  #dock kbd{display:none}
+}
+
+/* ---------- điện thoại ---------- */
+@media (max-width:820px){
+  :root{--tab:calc(62px + env(safe-area-inset-bottom))}
+  #topbar{grid-template-columns:minmax(0,1fr) auto;gap:8px 10px;padding:8px 10px 10px}
+  .tb-left .logo{display:none}
+  .prog{grid-column:1/-1;grid-row:2;width:auto}
+  #power{height:34px;padding:0 12px 0 10px;font-size:11.5px}
+  #exTop{font-size:14px;padding:2px 4px}
+  #modeChip{height:26px;padding:0 9px;font-size:11px}
+
+  /* thanh công cụ thành thanh tab dưới đáy */
+  #rail{left:0;right:0;top:auto;bottom:0;flex-direction:row;gap:0;padding:4px 4px env(safe-area-inset-bottom);border-radius:0;border:none;border-top:1px solid var(--rule);box-shadow:0 -4px 16px #0d1b2e14;overflow-x:auto;scrollbar-width:none;z-index:8}
+  #rail::-webkit-scrollbar{display:none}
+  #rail hr{display:none}
+  #rail button{flex:1 0 68px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+  #rail button.on::before{left:16px;right:16px;top:-4px;bottom:auto;width:auto;height:3px;border-radius:0 0 3px 3px}
+  #rail .rl{position:static;transform:none;opacity:1;background:none;color:inherit;padding:0;font-size:10.5px;white-space:nowrap}
+
+  .pnl{transform:translateY(18px);transform-origin:center bottom}
+  .drawer,.win{left:8px!important;right:8px!important;width:auto!important;top:auto!important;bottom:calc(var(--tab) + 66px)!important;max-height:calc(100% - var(--tb) - var(--tab) - 78px);z-index:7}
+  .win{height:auto;min-width:0;min-height:0;resize:none}
+  .win .hd{cursor:default}
+  #schBox,#prinBox{top:calc(var(--tb) + 8px)!important;height:auto!important}
+  #scopeBox .ctl{display:none}
+  #scopeBox.show .ctl{display:flex}
+  #scopeBox .hd{flex-wrap:wrap}
+
+  #dock{bottom:calc(var(--tab) + 10px);gap:4px;padding:5px;z-index:8}
+  #dock>.btn:not(.icon),#colorBtn{padding:8px 11px}
+  #dock .sep{margin:0 2px}
+  .dock-ext,#dock .sep.d-ext,#colorBtn .lbl-d,#colorBtn>.ic,#dock kbd{display:none}
+  #moreBtn{display:inline-flex}
+  #bCheck .opt{display:none}
+  #dock.ext-open .dock-ext{display:flex;position:absolute;right:0;bottom:calc(100% + 10px);flex-direction:column;align-items:stretch;background:var(--paper);border:1px solid var(--rule);border-radius:12px;box-shadow:var(--shadow);padding:6px;animation:rise .25s var(--ease)}
+  #dock.ext-open .dock-ext .btn{justify-content:flex-start}
+  .btn{min-height:40px}
+  #colorPop{left:auto;right:-60px;translate:0 0}
+
+  #banner{max-width:calc(100% - 20px);font-size:12.5px;white-space:normal;text-align:center;border-radius:12px;top:calc(var(--tb) + 8px)}
+  #wireAct{top:calc(var(--tb) + 56px)}
+  #toast{top:calc(var(--tb) + 100px)}
+
+  .start-card{padding:22px 18px 18px;border-radius:16px}
+  .start-card h1{font-size:21px}
+  .modes{grid-template-columns:1fr;gap:10px}
+  .mode-opt{padding:14px 14px 12px}
+  .mode-opt .mo-ic{display:none}
+  .mode-opt ul{display:none}
+  .start-foot{grid-template-columns:1fr}
+  #startGo{width:100%}
+}
+@media (max-width:820px),(hover:none) and (pointer:coarse){
+  .touch-only{display:grid!important}
+  .mouse-only{display:none!important}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
+}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-logo" viewBox="0 0 24 24"><path d="M3 12h3l2-6 4 12 3-9 2 3h4"/></symbol>
+  <symbol id="i-lesson" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 10h7M8.5 14h7M8.5 18h4"/></symbol>
+  <symbol id="i-knob" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
+  <symbol id="i-scope" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M5.5 13c1.5 0 1.5-5 3-5s1.5 5 3 5 1.5-5 3-5 1.5 5 3 5M9 21h6"/></symbol>
+  <symbol id="i-sch" viewBox="0 0 24 24"><path d="M2 12h4l1.5-4 3 8 3-8 3 8 1.5-4H22"/></symbol>
+  <symbol id="i-wave" viewBox="0 0 24 24"><path d="M3 12c2-7 4.5-7 6.5 0s4.5 7 6.5 0 2-4 5-4"/><path d="M12 3v18" stroke-dasharray="2 2.5"/></symbol>
+  <symbol id="i-view" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></symbol>
+  <symbol id="i-log" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M12 15h5"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .8-1 1.5v.6M12 17h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5L20 7"/></symbol>
+  <symbol id="i-hint" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.2 1.1 2V16h5v-.2c0-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+  <symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></symbol>
+  <symbol id="i-cut" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3zM21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M5.5 7l1 13h11l1-13M9 7V4h6v3"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 2v5M15 2v5M6 7h12v4a6 6 0 0 1-12 0zM12 17v5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 4.5v15M16 4.5v15"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/></symbol>
+</svg>
+<div id="app">
+  <main id="stage">
+    <canvas id="c3d"></canvas>
+
+    <header id="topbar">
+      <div class="tb-left">
+        <span class="logo" aria-hidden="true"><svg class="ic"><use href="#i-logo"/></svg></span>
+        <button id="modeChip" title="Đổi chế độ thực hành"><i></i><span id="modeChipTxt">Luyện tập</span></button>
+        <button id="exTop" title="Mở phiếu bài thực hành"><span id="exTitleTop"></span><svg class="ic"><use href="#i-chev"/></svg></button>
+      </div>
+      <div class="prog"><div class="bar"><i id="progBar"></i></div><div class="progTxt"><span id="progTxt"></span><span id="progErr"></span></div></div>
+      <div class="tb-right">
+        <span id="wireCount">Dây: 0</span>
+        <button id="power" title="Bật/tắt nguồn (phím Space)">Nguồn: tắt</button>
+      </div>
+    </header>
+
+    <nav id="rail" aria-label="Công cụ">
+      <button data-p="lesson" id="railLesson"><svg class="ic"><use href="#i-lesson"/></svg><span class="rl">Bài học</span></button>
+      <button data-p="knobs" id="railKnobs"><svg class="ic"><use href="#i-knob"/></svg><span class="rl">Núm chỉnh</span></button>
+      <button data-p="scope" id="railScope"><svg class="ic"><use href="#i-scope"/></svg><span class="rl">Dao động ký</span></button>
+      <button id="schBtn" title="Xem sơ đồ mạch trong giáo trình (phím S)"><svg class="ic"><use href="#i-sch"/></svg><span class="rl">Sơ đồ</span></button>
+      <button id="nlBtn" title="Mạch tối giản, dòng điện chạy và dạng sóng (phím N)"><svg class="ic"><use href="#i-wave"/></svg><span class="rl">Nguyên lý</span></button>
+      <button data-p="views" id="railViews"><svg class="ic"><use href="#i-view"/></svg><span class="rl">Góc nhìn</span></button>
+      <button data-p="log" id="railLog"><svg class="ic"><use href="#i-log"/></svg><span class="rl">Nhật ký</span></button>
+      <hr>
+      <button data-p="help" id="helpBtn"><svg class="ic"><use href="#i-help"/></svg><span class="rl">Cách dùng</span></button>
+    </nav>
+
+    <aside id="side" class="drawer pnl" aria-label="Phiếu bài thực hành">
+      <div class="ph"><h3>Bài thực hành</h3><button class="btn" data-close="lesson" aria-label="Đóng"><svg class="ic"><use href="#i-x"/></svg></button></div>
+      <div class="pb">
+        <select id="exSel" data-dd="rich" aria-label="Chọn bài thực hành"></select>
+        <div class="moderow"><span>Chế độ: <b id="modeName">Luyện tập</b></span><button class="link" id="modeChange">Đổi chế độ</button></div>
+        <p class="modeDesc" id="modeDesc"></p>
+        <div id="next"></div>
+        <div class="sheet">
+          <h2 id="exTitle"></h2>
+          <p class="goal" id="exGoal"></p>
+          <p class="exam-note">Chế độ Kiểm tra không có các bước đấu nối, sơ đồ và nguyên lý. Tự đấu mạch theo mục tiêu trên, bật nguồn khi đã chắc chắn.</p>
+          <details open><summary>Các bước thực hành</summary><ol class="steps" id="exSteps"></ol></details>
+          <div class="note" id="exNote"></div>
+        </div>
+      </div>
+    </aside>
+
+    <section id="knobPanel" class="drawer pnl" aria-label="Núm điều chỉnh">
+      <div class="ph"><h3>Núm điều chỉnh</h3><button class="btn" data-close="knobs" aria-label="Đóng"><svg class="ic"><use href="#i-x"/></svg></button></div>
+      <div class="pb" id="knobSec">
+        <div class="knob" data-k="alpha"><label for="alpha"><span>Góc điều khiển α (núm Vref)</span><b id="alphaV"></b></label><input id="alpha" type="range" min="0" max="180" step="1"></div>
+        <div class="knob" data-k="f555"><label for="f555"><span>Tần số máy phát 555 (P1)</span><b id="f555V"></b></label><input id="f555" type="range" min="1" max="50" step="1"></div>
+        <div class="knob" data-k="duty"><label for="duty"><span>Độ rộng xung D (núm PWM Adj)</span><b id="dutyV"></b></label><input id="duty" type="range" min="5" max="90" step="1"></div>
+        <div class="knob" data-k="q4"><label for="q4"><span>Công tắc chọn nhánh (bộ 4 khóa)</span><b id="q4V"></b></label><input id="q4" type="range" min="0" max="1" step="1"></div>
+        <div class="knob" data-k="finv"><label for="finv"><span>Tần số nghịch lưu (Freq Adj)</span><b id="finvV"></b></label><input id="finv" type="range" min="30" max="70" step="1"></div>
+      </div>
+    </section>
+
+    <section id="logPanel" class="drawer pnl" aria-label="Nhật ký">
+      <div class="ph"><h3>Nhật ký</h3><button class="btn" data-close="log" aria-label="Đóng"><svg class="ic"><use href="#i-x"/></svg></button></div>
+      <div class="pb"><div class="stats" id="stats"></div><div id="log" aria-live="polite"></div></div>
+    </section>
+
+    <section id="viewsPop" class="drawer pnl" aria-label="Góc nhìn">
+      <div class="ph"><h3>Góc nhìn</h3><button class="btn" data-close="views" aria-label="Đóng"><svg class="ic"><use href="#i-x"/></svg></button></div>
+      <div class="pb"><div class="views" id="views"></div></div>
+    </section>
+
+    <section id="help" class="drawer pnl" aria-label="Cách thao tác">
+      <div class="ph"><h3>Cách thao tác</h3><button class="btn" data-close="help" id="helpX" aria-label="Đóng"><svg class="ic"><use href="#i-x"/></svg></button></div>
+      <div class="pb">
+        <dl class="mouse-only">
+          <dt>Cắm dây</dt><dd>Kéo từ chốt này thả vào chốt kia, hoặc bấm lần lượt 2 chốt. Con trỏ tự hút vào chốt gần nhất.</dd>
+          <dt>Rút dây</dt><dd>Chuột phải vào dây, hoặc bấm chọn dây rồi <kbd>Del</kbd>. <kbd>Ctrl+Z</kbd> để hoàn tác.</dd>
+          <dt>Camera</dt><dd>Kéo trái để xoay, giữ con lăn hoặc kéo phải để dời, cuộn để zoom. Nhấp đúp vào module/chốt để phóng to. <kbd>T</kbd> nhìn từ trên, <kbd>R</kbd> toàn cảnh.</dd>
+          <dt>Phím tắt</dt><dd><kbd>Space</kbd> nguồn · <kbd>S</kbd> sơ đồ · <kbd>N</kbd> nguyên lý · <kbd>C</kbd> kiểm tra mạch · <kbd>H</kbd> gợi ý · <kbd>0</kbd>–<kbd>6</kbd> màu dây · <kbd>Esc</kbd> đóng/huỷ</dd>
+        </dl>
+        <dl class="touch-only">
+          <dt>Cắm dây</dt><dd>Chạm chốt đầu, rồi chạm chốt đích. Có thể kéo từ chốt sang chốt.</dd>
+          <dt>Rút dây</dt><dd>Chạm vào dây để chọn, rồi bấm Rút dây.</dd>
+          <dt>Camera</dt><dd>Một ngón để xoay, hai ngón để zoom và dời. Mở Góc nhìn để phóng to từng module.</dd>
+        </dl>
+      </div>
+    </section>
+
+    <div id="dock" role="toolbar" aria-label="Thao tác">
+      <button class="btn primary" id="bCheck"><svg class="ic"><use href="#i-check"/></svg>Kiểm tra<span class="opt"> mạch</span> <kbd>C</kbd></button>
+      <button class="btn" id="bHint"><svg class="ic"><use href="#i-hint"/></svg>Gợi ý <kbd>H</kbd></button>
+      <span class="sep"></span>
+      <button class="btn icon" id="bUndo" title="Hoàn tác (Ctrl+Z)" aria-label="Hoàn tác"><svg class="ic"><use href="#i-undo"/></svg></button>
+      <button class="btn icon" id="bRedo" title="Làm lại (Ctrl+Y)" aria-label="Làm lại"><svg class="ic"><use href="#i-redo"/></svg></button>
+      <span class="sep"></span>
+      <div class="colorwrap">
+        <button class="btn" id="colorBtn" title="Màu dây (phím 0–6)" aria-label="Màu dây"><i class="sw auto" id="colorDot"></i><span class="lbl-d">Màu dây</span><svg class="ic"><use href="#i-chev"/></svg></button>
+        <div id="colorPop" class="pnl"><p class="eyebrow">Màu dây · phím 0–6</p><div id="swatches"></div></div>
+      </div>
+      <span class="sep d-ext"></span>
+      <div class="dock-ext">
+        <button class="btn" id="bWrong"><svg class="ic"><use href="#i-cut"/></svg>Xóa dây sai</button>
+        <button class="btn" id="bAnswer"><svg class="ic"><use href="#i-book"/></svg>Hiện đáp án</button>
+        <button class="btn danger" id="bClear"><svg class="ic"><use href="#i-trash"/></svg>Xóa hết dây</button>
+      </div>
+      <button class="btn icon" id="moreBtn" aria-label="Thêm thao tác"><svg class="ic"><use href="#i-more"/></svg></button>
+    </div>
+
+    <div id="banner" role="status"></div>
+    <div id="wireAct"><span id="wireActTxt"></span><button class="btn danger" id="wireActBtn"><svg class="ic"><use href="#i-cut"/></svg>Rút dây</button></div>
+
+    <div id="scopeBox" class="win pnl">
+      <div class="hd">
+        <b>Dao động ký</b>
+        <span class="ctl">CH1 <select id="v1" aria-label="CH1 V/div"></select> CH2 <select id="v2" aria-label="CH2 V/div"></select> Time <select id="td" aria-label="Time/div"></select></span>
+        <button class="btn" id="scMin" title="Đóng" aria-label="Đóng dao động ký"><svg class="ic"><use href="#i-x"/></svg></button>
+      </div>
+      <canvas id="scope" width="540" height="360"></canvas>
+      <div id="meters"><span>Vôn kế <b id="mV">—</b></span><span>Ampe kế <b id="mA">—</b></span></div>
+    </div>
+    <div id="schBox" class="win pnl">
+      <div class="hd"><b id="schTitle">Sơ đồ mạch</b><span id="schTabs"></span>
+        <button class="btn" id="schOut" title="Thu nhỏ"><svg class="ic"><use href="#i-minus"/></svg></button><button class="btn" id="schIn" title="Phóng to"><svg class="ic"><use href="#i-plus"/></svg></button><button class="btn" id="schFit" title="Vừa khung"><svg class="ic"><use href="#i-fit"/></svg></button><button class="btn" id="schX" title="Đóng (Esc)"><svg class="ic"><use href="#i-x"/></svg></button></div>
+      <div id="schView"><img id="schImg" alt="Sơ đồ mạch"></div>
+      <div id="schCap"></div>
+    </div>
+    <div id="prinBox" class="win pnl"></div>
+    <div id="tip"></div>
+    <div id="toast" aria-live="assertive"></div>
+    <div id="result"><div class="card" id="resultCard"></div></div>
+
+    <div id="startScr" class="show" role="dialog" aria-modal="true" aria-labelledby="startH">
+      <div class="start-card">
+        <span class="logo" aria-hidden="true"><svg class="ic"><use href="#i-logo"/></svg></span>
+        <p class="eyebrow">Phòng Lab Điện tử công suất 3D · Bài 7 · 8 · 9</p>
+        <h1 id="startH">Chọn chế độ thực hành</h1>
+        <p class="sub">Cắm mạch trên module PE-801, PE-803, PE-803A, PE-805 và bo đồng bộ 1 pha.</p>
+        <div class="modes" role="radiogroup">
+          <button class="mode-opt" data-pick="practice" role="radio">
+            <span class="radio"></span><span class="mo-ic"><svg class="ic"><use href="#i-hint"/></svg></span>
+            <b>Luyện tập</b><p>Tự đấu mạch theo các bước, có trợ giúp khi bạn cần.</p>
+            <ul><li><svg class="ic"><use href="#i-check"/></svg>Các bước đấu nối, sơ đồ, nguyên lý</li><li><svg class="ic"><use href="#i-check"/></svg>Bấm Gợi ý để biết dây tiếp theo</li><li><svg class="ic"><use href="#i-check"/></svg>Xóa dây sai, xem đáp án</li></ul>
+          </button>
+          <button class="mode-opt" data-pick="exam" role="radio">
+            <span class="radio"></span><span class="mo-ic"><svg class="ic"><use href="#i-target"/></svg></span>
+            <b>Kiểm tra</b><p>Tự đấu mạch từ bàn trống và nhận điểm.</p>
+            <ul><li class="no"><svg class="ic"><use href="#i-x"/></svg>Không có các bước, sơ đồ, gợi ý</li><li class="no"><svg class="ic"><use href="#i-x"/></svg>Không hiện tiến độ</li><li><svg class="ic"><use href="#i-check"/></svg>Mỗi lần bật nguồn sai bị trừ điểm</li></ul>
+          </button>
+        </div>
+        <div class="start-foot">
+          <div><span class="eyebrow" style="display:block">Bài thực hành</span><select id="startEx" data-dd="rich" aria-label="Chọn bài thực hành"></select></div>
+          <button class="btn primary" id="startGo">Vào phòng lab<svg class="ic"><use href="#i-arrow"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="textures.js"></script>
+<script src="nguyen-ly.js"></script>
+<script src="dropdown.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* =========================================================================
+   1. HẰNG SỐ & MÔ HÌNH TÍN HIỆU
+   ========================================================================= */
+const S = 36;            // pixel / cm trên texture mặt module
+const PT = 1.2;          // độ dày mặt module (cm)
+const JH = 0.75;         // chiều cao chốt cắm
+const TWO_PI = Math.PI * 2;
+const W50 = TWO_PI * 50;
+const VAC = 24 * Math.SQRT2;                 // ~24VAC (X–Y) biên độ
+const VP3 = 24 * Math.SQRT2 / Math.sqrt(3);  // nguồn 3 pha 24VAC (điện áp dây) → biên độ pha
+const COLORS = {red:'#d8312b',black:'#1f1f22',yellow:'#f2c318',blue:'#2463c9',green:'#1f9b4c',cream:'#eadbb0',teal:'#178a86',cyan:'#2bb6d0',white:'#eeeeee'};
+const WIRE_COLORS = [['red','#d8312b'],['black','#2a2a2e'],['yellow','#f2c318'],['blue','#2463c9'],['green','#1f9b4c'],['white','#e8e8e8']];
+
+const ST = { alphaDeg: 60, a: Math.PI/3, f555: 4, finv: 50, duty: 50, D: .5, q4: 0 };
+
+const frac = x => x - Math.floor(x);
+const md = x => ((x % TWO_PI) + TWO_PI) % TWO_PI;
+const TH = t => md(W50 * t);
+const vX = t => VAC * Math.sin(W50 * t);
+const vP = (t, k) => VP3 * Math.sin(W50 * t - k * TWO_PI / 3);
+const s555 = (t, s) => frac(t * s.f555) < 0.55;
+const mv = t => frac(t * 1000) < 0.5;
+const burst = (t, s) => s555(t, s) && mv(t);
+const PW = 0.35; // độ rộng xung kích (rad)
+const pulseA = (t, s) => { const d = TH(t) - s.a; return d >= 0 && d < PW ? 9 : 0; };
+const pulseB = (t, s) => { const d = TH(t) - Math.PI - s.a; return d >= 0 && d < PW ? 9 : 0; };
+const condR = (t, s) => { const th = TH(t); return (th >= s.a && th <= Math.PI) || (th >= Math.PI + s.a); };
+
+// Cầu 1 pha có điều khiển, tải R (bán phần & toàn phần giống nhau về điện áp)  → [U+, U−] so với Y
+function bridgeR(t, s) {
+  const th = TH(t), v = vX(t);
+  if (th >= s.a && th <= Math.PI) return [v, 0];
+  if (th >= Math.PI + s.a) return [0, v];
+  return [0, 0];
+}
+// Cầu toàn phần, tải RL (giả thiết dòng liên tục)
+function bridgeFullRL(t, s) {
+  if (Math.cos(s.a) < 0.05) return bridgeR(t, s);
+  const th = TH(t), v = vX(t);
+  return (th >= s.a && th < s.a + Math.PI) ? [v, 0] : [0, v];
+}
+const uavgSemi = s => VAC / Math.PI * (1 + Math.cos(s.a));
+const uavgFull = s => Math.cos(s.a) < 0.05 ? uavgSemi(s) : 2 * VAC / Math.PI * Math.cos(s.a);
+
+// Triac + tải RL (φ = 45°)
+const PHI = Math.PI / 4;
+const ihat = (d, ae) => Math.sin(d + ae - PHI) - Math.sin(ae - PHI) * Math.exp(-d / Math.tan(PHI));
+let betaCache = { a: -1, b: Math.PI };
+function betaFor(ae) {
+  if (betaCache.a === ae) return betaCache.b;
+  let b = Math.PI;
+  for (let d = 0.02; d < Math.PI * 1.5; d += 0.004) { if (ihat(d, ae) <= 0) { b = d; break; } }
+  b = Math.min(b, Math.PI);
+  betaCache = { a: ae, b }; return b;
+}
+function triacRL(t, s) {
+  const ae = Math.max(s.a, PHI), b = betaFor(ae), th = TH(t);
+  for (let k = 0; k < 2; k++) {
+    const d = md(th - ae - k * Math.PI);
+    if (d < b) return { on: true, i: (k ? -1 : 1) * ihat(d, ae) };
+  }
+  return { on: false, i: 0 };
+}
+
+// Cầu 3 pha điều khiển hoàn toàn
+const FIRE3 = k => Math.PI / 6 + (k - 1) * Math.PI / 3;
+const PH3 = { 1: 0, 3: 1, 5: 2, 4: 0, 6: 1, 2: 2 };
+function bridge3(t, s) {
+  const th = TH(t); let bp = 1, bd = 99, bn = 4, bnd = 99;
+  for (const k of [1, 3, 5]) { const d = md(th - FIRE3(k) - s.a); if (d < bd) { bd = d; bp = k; } }
+  for (const k of [2, 4, 6]) { const d = md(th - FIRE3(k) - s.a); if (d < bnd) { bnd = d; bn = k; } }
+  const vp = vP(t, PH3[bp]), vn = vP(t, PH3[bn]);
+  if (vp - vn < 0) return [0, 0];
+  return [vp, vn];
+}
+const pulse3 = (k, t, s) => md(TH(t) - FIRE3(k) - s.a) < PW ? 9 : 0;
+
+// Nghịch lưu
+const sq = (t, s) => frac(t * s.finv) < 0.5;
+const tri = t => 4 * Math.abs(frac(t * 1500) - 0.5) - 1;
+const ref = t => 0.85 * Math.sin(W50 * t);
+const on1 = t => ref(t) > tri(t), on2 = t => -ref(t) > tri(t);
+
+// Điện thế các nguồn (luôn có khi bật nguồn)
+const BASE_POT = {
+  'ps.p12': () => 12, 'ps.gnd': () => 0,
+  'ps.X': t => vX(t), 'ps.Y': () => 0,
+  'ps.L1': t => vP(t, 0), 'ps.L2': t => vP(t, 1), 'ps.L3': t => vP(t, 2), 'ps.N': () => 0,
+  'sv.X': t => vX(t), 'sv.Y': () => 0, 'sv.p12': () => 12, 'sv.gnd': () => 0,
+  'sv.acL': t => vX(t) * 220 / 24, 'sv.acN': () => 0,
+};
+// Các nhóm cực của cùng một nguồn → nối chung = ngắn mạch
+const SOURCES = [['ps.p12','ps.gnd'], ['ps.L1','ps.L2','ps.L3','ps.N'], ['ps.X','ps.Y'], ['sv.X','sv.Y'], ['sv.p12','sv.gnd'], ['sv.acL','sv.acN']];
+// Liên kết bên trong thiết bị đo: ampe kế (điện trở ≈ 0), 2 kẹp GND của dao động ký chung vỏ máy
+const INTERNAL = [['m.aP','m.aN'], ['osc.c1n','osc.c2n'],
+  ['p2.bkUn','p2.bkOn'], ['p2.boUn','p2.boOn'], ['p2.boUn','p2.boGn'], ['p2.bbUn','p2.bbOp']];
+
+/* =========================================================================
+   2. ĐỊNH NGHĨA MODULE (toạ độ cm, gốc ở góc trên-trái mặt module)
+   ========================================================================= */
+const J = (id, label, x, y, c, o = {}) => ({ id, label, x, y, c, lp: o.lp || 'b', grp: o.grp || '', meas: !!o.meas, small: !!o.small });
+const MODS = {};
+const defMod = m => { MODS[m.id] = m; };
+
+defMod({
+  id: 'ps', short: 'Bộ nguồn', w: 24, h: 24.4, bg: '#3a3f47', ink: '#e8edf3', edge: '#2a2e34',
+  jacks: [
+    J('p12', '+12V', 7, 6.4, 'red', { grp: 'PS-012' }), J('gnd', 'GND', 17, 6.4, 'black', { grp: 'PS-012' }),
+    J('L1', 'L1', 4, 13.8, 'red', { grp: 'PS-342' }), J('L2', 'L2', 9.3, 13.8, 'yellow', { grp: 'PS-342' }),
+    J('L3', 'L3', 14.6, 13.8, 'blue', { grp: 'PS-342' }), J('N', 'N', 20, 13.8, 'black', { grp: 'PS-342' }),
+    J('X', 'X*', 7, 21, 'green', { grp: '~24VAC X–Y' }), J('Y', 'Y', 17, 21, 'blue', { grp: '~24VAC X–Y' }),
+  ],
+  leds: [{ x: 21.6, y: 1.4 }],
+  paint(P) {
+    P.title('BỘ NGUỒN PE-500PS', 11, 1.4);
+    P.block(1, 2.6, 22, 6.2, 'PS-012 · +12VDC / 1A');
+    P.block(1, 9.6, 22, 6.8, 'PS-342 · ~24VAC 3 PHA (điện áp dây)');
+    P.block(1, 17.2, 22, 6.4, '~24VAC 1 PHA · X–Y (cùng pha với X của bo đồng bộ)');
+    P.xfmr(12, 21);
+    P.text('POWER', 19.6, 1.45, { size: .45 });
+  }
+});
+
+// Các module thật: mặt module là ảnh chụp đã nắn phẳng (window.TEX), toạ độ chốt đo trên ảnh
+defMod({
+  id: 'e1', short: 'PE-801', w: 50, h: 39.7, bg: '#e9ece8', ink: '#2c3140', edge: '#b9bdb8', photo: 'pe801', js: 1.15,
+  jacks: [
+    J('o555', 'OUT', 13, 7.1, 'green', { grp: '555' }),
+    J('mv1', 'OUT1', 18.1, 8.4, 'green', { grp: 'Đa hài' }), J('mv2', 'OUT2', 28.3, 8.4, 'green', { grp: 'Đa hài' }),
+    J('ujtP', '+', 32.1, 5.4, 'red', { grp: 'UJT' }), J('ujtN', '−', 32.1, 10.9, 'black', { grp: 'UJT' }), J('ujtO', 'OUT', 39.4, 8.3, 'green', { grp: 'UJT' }),
+    J('lpa', 'trên', 45.3, 11.5, 'red', { grp: 'LOAD Đ1' }), J('lpb', 'dưới', 45.3, 18.8, 'red', { grp: 'LOAD Đ1' }),
+    J('r01a', '', 45.3, 22.4, 'black', { grp: 'LOAD R01' }),
+    J('isoIn1', 'IN1', 3.1, 20.5, 'yellow', { grp: 'Biến thế cách ly' }), J('isoIn2', 'IN2', 3.2, 23, 'yellow', { grp: 'Biến thế cách ly' }),
+    J('isoA', 'A', 13.7, 15.9, 'green', { grp: 'Biến thế cách ly' }), J('isoB', 'B', 13.7, 18.5, 'black', { grp: 'Biến thế cách ly' }),
+    J('psL', 'L1', 18.2, 16, 'red', { grp: 'Phase-Sync' }), J('psN', 'N', 18.2, 19.6, 'cream', { grp: 'Phase-Sync' }),
+    J('q1', 'Q1', 31.8, 17.1, 'green', { grp: 'Phase-Sync', small: true }), J('q2', 'Q2', 31.8, 19, 'green', { grp: 'Phase-Sync', small: true }),
+    J('inh', 'INHIBIT', 30.5, 15.3, 'yellow', { grp: 'Phase-Sync', small: true }),
+    J('a1', 'A1', 38.7, 15.2, 'green', { grp: 'Phase-Sync' }), J('b1', 'B1', 38.7, 17.7, 'black', { grp: 'Phase-Sync' }),
+    J('a2', 'A2', 38.7, 20.2, 'green', { grp: 'Phase-Sync' }), J('b2', 'B2', 38.7, 22.5, 'black', { grp: 'Phase-Sync' }),
+    J('in_p', '+', 3.5, 27.5, 'red', { grp: '12VDC INPUT' }), J('in_n', '−', 3.5, 35.2, 'black', { grp: '12VDC INPUT' }),
+    J('brP', '+', 14.8, 28, 'red', { grp: 'Cầu diode' }), J('brL', '~', 8.4, 28.1, 'blue', { grp: 'Cầu diode (trái)' }),
+    J('brR', '~', 14.8, 34.3, 'blue', { grp: 'Cầu diode (phải)' }), J('brN', '−', 8.4, 34.5, 'black', { grp: 'Cầu diode' }),
+    J('dA', 'A', 18.7, 29.1, 'red', { grp: 'DIODE' }), J('dK', 'K', 18.7, 34.3, 'black', { grp: 'DIODE' }),
+    J('tT2', 'T2', 24.5, 29, 'red', { grp: 'TRIAC' }), J('tG', 'G', 21.7, 32.75, 'green', { grp: 'TRIAC' }), J('tT1', 'T1', 24.5, 33.9, 'red', { grp: 'TRIAC' }),
+    J('sA', 'A', 30.1, 28.75, 'red', { grp: 'SCR' }), J('sG', 'G', 27.7, 32.5, 'green', { grp: 'SCR' }), J('sK', 'K', 30.1, 34, 'black', { grp: 'SCR' }),
+    J('mD', 'D', 35.7, 28.8, 'red', { grp: 'MOSFET' }), J('mG', 'G', 32.9, 32, 'green', { grp: 'MOSFET' }), J('mS', 'S', 35.7, 33.75, 'yellow', { grp: 'MOSFET' }),
+    J('iC', 'C', 41.1, 28.6, 'red', { grp: 'IGBT' }), J('iG', 'G', 38.1, 31.2, 'green', { grp: 'IGBT' }), J('iE', 'E', 41.1, 33.5, 'yellow', { grp: 'IGBT' }),
+    J('bC', 'C', 47.25, 28.5, 'red', { grp: 'TRANSISTOR' }), J('bG', 'B', 44.1, 29.2, 'green', { grp: 'TRANSISTOR' }), J('bE', 'E', 47.25, 33.4, 'yellow', { grp: 'TRANSISTOR' }),
+  ],
+  lamps: [{ a: 'lpa', b: 'lpb', x: 45.3, y: 6.7 }],
+  knobs: [{ x: 3.8, y: 7.25, p: 'f555', label: 'P1' }, { x: 20.6, y: 22.3, p: 'alpha', label: 'Vref adj.' }, { x: 33.3, y: 7.5, p: null, label: '' }],
+});
+
+(function () {
+  const jk = [J('in_p', '+', 3.5, 23.5, 'red', { grp: '12VDC INPUT' }), J('in_n', '−', 3.5, 26.1, 'black', { grp: '12VDC INPUT' })];
+  // [id, nhãn, x, y, màu] — 3 khối Phase (đồng bộ L/N, xung kích G/K qua biến áp xung)
+  const ph = [
+    ['PHASE-1', [['p1L', 'L1', 2.9, 5.5, 'red'], ['p1N', 'N/L3', 2.9, 8, 'blue'],
+      ['k1', 'K1', 23.3, 3.5, 'black'], ['g1', 'G1', 23.3, 5.2, 'blue'], ['k4', 'K4', 23.3, 7.2, 'black'], ['g4', 'G4', 23.3, 8.9, 'blue'],
+      ['k11', 'K1-1', 18.1, 3.5, 'black'], ['g11', 'G1-1', 18.1, 5.2, 'black'], ['k41', 'K4-1', 18.1, 7.2, 'black'], ['g41', 'G4-1', 18.1, 8.9, 'black']]],
+    ['PHASE-2', [['p2L', 'L2', 8.1, 14.4, 'red'], ['p2N', 'N/L1', 8.1, 17.1, 'blue'],
+      ['k3', 'K3', 23.5, 12.4, 'black'], ['g3', 'G3', 23.5, 14.2, 'blue'], ['k6', 'K6', 23.5, 16.1, 'black'], ['g6', 'G6', 23.5, 17.9, 'blue']]],
+    ['PHASE-3', [['p3L', 'L3', 8.1, 23.6, 'red'], ['p3N', 'N/L2', 8.1, 26.3, 'blue'],
+      ['k5', 'K5', 23.6, 21.5, 'black'], ['g5', 'G5', 23.6, 23.3, 'blue'], ['k2', 'K2', 23.6, 25.2, 'black'], ['g2', 'G2', 23.6, 27, 'blue']]],
+  ];
+  ph.forEach(([n, list]) => list.forEach(([id, l, x, y, c]) => jk.push(J(id, l, x, y, c, { grp: n }))));
+  // SCR: K (đỏ, trên) · G (vàng) · A (đen, dưới)
+  [[1, 32.5, 3.4, 30.3, 4.1, 7.2], [3, 38.8, 3.4, 36.6, 4.1, 7.2], [5, 45, 3.4, 42.9, 4.1, 7.2],
+   [4, 32.6, 9.8, 30.5, 10.5, 13.5], [6, 38.9, 9.8, 36.8, 10.5, 13.5], [2, 45.4, 9.7, 43.1, 10.5, 13.5]].forEach(([k, x, yk, gx, gy, ya]) =>
+    jk.push(J('s' + k + 'K', 'K' + k, x, yk, 'red', { grp: 'SCR' + k }), J('s' + k + 'G', 'G' + k, gx, gy, 'yellow', { grp: 'SCR' + k }), J('s' + k + 'A', 'A' + k, x + .1, ya, 'black', { grp: 'SCR' + k })));
+  // Diode: K (đỏ, trên) · A (đen, dưới)
+  [[1, 32.8, 16.3, 20.2], [3, 39.1, 16.3, 20.2], [5, 45.5, 16.3, 20.2], [4, 33, 23.1, 26.9], [6, 39.4, 23.1, 27], [2, 45.7, 23.1, 27]].forEach(([k, x, yk, ya]) =>
+    jk.push(J('d' + k + 'K', 'K', x, yk, 'red', { grp: 'D' + k }), J('d' + k + 'A', 'A', x + .1, ya, 'black', { grp: 'D' + k })));
+  defMod({
+    id: 'e3', short: 'PE-803', w: 52, h: 31, bg: '#c9ccd2', ink: '#262b38', edge: '#9a9ea6', photo: 'pe803', js: 1.05, jacks: jk,
+    knobs: [{ x: 3.3, y: 16.6, p: 'alpha', label: 'Vref Adj' }],
+  });
+})();
+
+(function () {
+  const jk = [
+    J('syL', 'L', 2.3, 5, 'red', { grp: '220VAC đồng bộ (TCA785)' }), J('syN', 'N', 2.3, 10.2, 'black', { grp: '220VAC đồng bộ (TCA785)' }),
+    J('acL', 'L', 14.1, 16.3, 'red', { grp: '220VAC sau POWER ON' }), J('acN', 'N', 14.1, 21.7, 'black', { grp: '220VAC sau POWER ON' }),
+    J('X', 'X*', 17, 17.1, 'green', { grp: '~24VAC' }), J('Y', 'Y', 22.8, 17.1, 'blue', { grp: '~24VAC' }),
+    J('p12', '+12', 17, 20.9, 'red', { grp: '12VDC OUT' }), J('gnd', 'GND', 22.9, 20.9, 'black', { grp: '12VDC OUT' }),
+    J('in_p', '+12', 25.95, 20.8, 'red', { grp: '12VDC INPUT' }), J('in_n', 'GND', 29.8, 20.8, 'black', { grp: '12VDC INPUT' }),
+    J('K11', 'K1-1', 22.15, 3.5, 'green', { grp: 'Kích TF-A' }), J('G11', 'G1-1', 22.15, 6.65, 'black', { grp: 'Kích TF-A' }),
+    J('K1', 'K1', 28.1, 3.5, 'green', { grp: 'Kích TF-A' }), J('G1', 'G1', 28.1, 6.65, 'black', { grp: 'Kích TF-A' }),
+    J('K21', 'K2-1', 22.15, 9.7, 'green', { grp: 'Kích TF-B' }), J('G21', 'G2-1', 22.15, 13, 'black', { grp: 'Kích TF-B' }),
+    J('K2', 'K2', 28.1, 9.7, 'green', { grp: 'Kích TF-B' }), J('G2', 'G2', 28.1, 13, 'black', { grp: 'Kích TF-B' }),
+  ];
+  // SCR: K (xanh lá, trên) · G (xanh dương) · A (vàng, dưới)
+  [[1, 35.6, 3.5, 33.3, 4.85, 8.55], [2, 40.9, 3.5, 38.45, 4.85, 8.55], [3, 35.6, 11.55, 33.4, 12.9, 16.7], [4, 40.9, 11.55, 38.6, 12.9, 16.7]].forEach(([k, x, yk, gx, gy, ya]) =>
+    jk.push(J('s' + k + 'K', 'K' + k, x, yk, 'green', { grp: 'SCR' + k }), J('s' + k + 'G', 'G' + k, gx, gy, 'blue', { grp: 'SCR' + k }), J('s' + k + 'A', 'A' + k, x, ya, 'yellow', { grp: 'SCR' + k })));
+  [[1, 35.65], [2, 40.9]].forEach(([k, x]) => jk.push(J('d' + k + 'K', 'K' + k, x, 19.6, 'green', { grp: 'D' + k }), J('d' + k + 'A', 'A' + k, x, 24.8, 'yellow', { grp: 'D' + k })));
+  defMod({
+    id: 'sv', short: 'Bo ĐK đồng bộ', w: 44, h: 27.2, bg: '#f5f6fa', ink: '#1d2a6b', edge: '#c9ccd6', photo: 'sv', js: 1.15, jacks: jk,
+    knobs: [{ x: 27.2, y: 17.7, p: 'alpha', label: '' }],
+    leds: [{ x: 8.7, y: 18.6, sw: true }],
+    sw: { x: 6.1, y: 19.4 }, // công tắc POWER ON (bấm để bật/tắt)
+  });
+})();
+
+defMod({
+  id: 'm', short: 'PE-803A', w: 17.5, h: 37.5, bg: '#e8ebe9', ink: '#2a3040', edge: '#b4b8b5', photo: 'pe803a', js: 1.1,
+  jacks: [
+    J('aP', '+', 1.9, 19.3, 'red', { grp: 'Ampe kế', meas: true }), J('aN', '−', 8.5, 19.3, 'black', { grp: 'Ampe kế', meas: true }),
+    J('vP', '+', 1.9, 33, 'red', { grp: 'Vôn kế', meas: true }), J('vN', '−', 8.75, 33, 'black', { grp: 'Vôn kế', meas: true }),
+    J('l1b', '', 11.6, 9.75, 'red', { grp: 'Đèn Đ1' }), J('l1a', '', 11.6, 14.5, 'black', { grp: 'Đèn Đ1' }),
+    J('l2b', '', 14.75, 9.75, 'red', { grp: 'Đèn Đ2' }), J('l2a', '', 14.75, 14.5, 'black', { grp: 'Đèn Đ2' }),
+    J('Lb', '', 11.6, 16.9, 'red', { grp: 'Cuộn cảm L' }), J('La', '', 11.7, 23.1, 'black', { grp: 'Cuộn cảm L' }),
+    J('Rb', '', 14.75, 16.9, 'red', { grp: 'Điện trở R' }), J('Ra', '', 15, 23.1, 'black', { grp: 'Điện trở R' }),
+    J('r01b', '', 11.9, 27.3, 'red', { grp: 'R01' }), J('r01a', '', 11.9, 33.1, 'black', { grp: 'R01' }),
+    J('r02b', '', 15.2, 27.3, 'red', { grp: 'R02' }), J('r02a', '', 15.3, 33.1, 'black', { grp: 'R02' }),
+  ],
+  lamps: [{ a: 'l1a', b: 'l1b', x: 4.7, y: 4.4 }, { a: 'l2a', b: 'l2b', x: 12.2, y: 4.4 }],
+  // kim chỉ thị: tâm quay (x,y), dài r, góc a0..a1 ứng với 0..max trên thang đo của ảnh
+  meters: [{ kind: 'A', x: 5.3, y: 13.6, r: 4.1, a0: -.84, a1: .79, max: 5 }, { kind: 'V', x: 5.2, y: 29.7, r: 4.8, a0: -.63, a1: .65, max: 30 }],
+});
+
+defMod({
+  id: 'inv', short: 'PE-805', w: 32, h: 39, bg: '#c7c9d6', ink: '#24283a', edge: '#9a9cab', photo: 'pe805', js: 1.15,
+  jacks: [
+    J('vcc', 'VCC', 2.1, 6.7, 'red', { grp: 'Sóng vuông', small: true }),
+    J('out1', 'OUT1', 11.05, 9.2, 'yellow', { grp: 'CD4047', small: true }), J('g1', 'G1', 14.2, 9.2, 'yellow', { grp: 'MOSFET Q1', small: true }),
+    J('out2', 'OUT2', 11.05, 14.7, 'teal', { grp: 'CD4047', small: true }), J('g2', 'G2', 14.1, 14.7, 'teal', { grp: 'MOSFET Q2', small: true }),
+    J('icgnd', 'GND', 10.9, 17.2, 'black', { grp: 'CD4047', small: true }),
+    J('sqGnd', '−', 19.4, 11.9, 'black', { grp: '12VDC INPUT (vuông)' }), J('sqCT', '+', 23.4, 11.9, 'yellow', { grp: '12VDC INPUT (vuông)' }),
+    J('sqOa', '', 30.05, 6.3, 'green', { grp: '220VDC OUTPUT (vuông)' }), J('sqOb', '', 30.05, 17.3, 'black', { grp: '220VDC OUTPUT (vuông)' }),
+    J('sinP', '+', 4.3, 29.1, 'red', { grp: '12VDC INPUT (sin)' }), J('sinN', '−', 4.3, 32.3, 'black', { grp: '12VDC INPUT (sin)' }),
+    J('h1', '1H0', 12.7, 25.75, 'teal', { grp: 'Điểm đo', meas: true, small: true }),
+    J('vs1', 'VS1', 12.7, 27.3, 'yellow', { grp: 'Điểm đo', meas: true, small: true }),
+    J('l1', '1L0', 12.7, 32.65, 'teal', { grp: 'Điểm đo', meas: true, small: true }),
+    J('h2', '2H0', 18.8, 25.7, 'teal', { grp: 'Điểm đo', meas: true, small: true }),
+    J('vs2', 'VS2', 17.25, 30.4, 'blue', { grp: 'Điểm đo', meas: true, small: true }),
+    J('l2', '2L0', 18.8, 32.6, 'teal', { grp: 'Điểm đo', meas: true, small: true }),
+    J('tgnd', 'GND', 17.9, 35.85, 'black', { grp: 'Điểm đo', meas: true, small: true }),
+    J('sinOa', '', 28.5, 27.05, 'black', { grp: '220VAC OUTPUT (sin)' }), J('sinOb', '', 28.5, 30.2, 'black', { grp: '220VAC OUTPUT (sin)' }),
+  ],
+  knobs: [{ x: 2.6, y: 16.8, p: 'finv', label: 'Freq Adj' }],
+});
+
+// PE-802: bảng thí nghiệm bộ biến đổi DC-DC (Buck, Boost, Buck-Boost, 4 khóa) – vẽ theo hình 9.3–9.6 trong slide
+{
+  const blk = (p, bx, by, outTop, outBot) => [
+    J(p + 'Up', '+Uin', bx + 1.6, by + 3.4, 'red', { grp: '' }), J(p + 'Un', '−Uin', bx + 1.6, by + 10.3, 'black', { grp: '' }),
+    J(p + 'Gp', 'Upwm+', bx + 5.6, by + 7.6, 'yellow', { grp: '', small: true }), J(p + 'Gn', 'Upwm−', bx + 8.4, by + 7.6, 'black', { grp: '', small: true }),
+    J(outTop[0], outTop[1], bx + 13.9, by + 3.4, outTop[2], { grp: '' }), J(outBot[0], outBot[1], bx + 13.9, by + 10.3, outBot[2], { grp: '' }),
+  ];
+  const jk = [
+    J('pwP', '+', 3.4, 6.6, 'red', { grp: 'Upwm OUTPUT' }), J('pwN', '−', 3.4, 11.4, 'black', { grp: 'Upwm OUTPUT' }),
+    J('in_p', '+', 4, 20.4, 'red', { grp: '+12VDC INPUT' }), J('in_n', '−', 4, 25.6, 'black', { grp: '+12VDC INPUT' }),
+    ...blk('bk', 12, 2.5, ['bkOp', '+Uout', 'red'], ['bkOn', '−Uout', 'black']),
+    ...blk('bo', 28.5, 2.5, ['boOp', '+Uout', 'red'], ['boOn', '−Uout', 'black']),
+    ...blk('bb', 12, 16, ['bbOn', '−Uout', 'black'], ['bbOp', '+Uout', 'red']),
+    J('qUp', '+Uin', 30.1, 19.4, 'red', { grp: '' }), J('qUn', '−Uin', 30.1, 26.3, 'black', { grp: '' }),
+    J('qGp', 'Upwm+', 34.1, 23.8, 'yellow', { grp: '', small: true }), J('qGn', 'Upwm−', 36.9, 23.8, 'black', { grp: '', small: true }),
+    J('qLp', '+', 42.4, 21.2, 'red', { grp: 'LOAD' }), J('qLn', '−', 42.4, 25.8, 'black', { grp: 'LOAD' }),
+    J('Rp', '', 48.6, 7.2, 'red', { grp: 'Tải R' }), J('Rn', '', 48.6, 15.6, 'black', { grp: 'Tải R' }),
+    J('Cp', '+', 55.2, 7.2, 'red', { grp: 'Tụ C' }), J('Cn', '−', 55.2, 15.6, 'black', { grp: 'Tụ C' }),
+  ];
+  const grpName = { bk: 'HẠ ÁP (Buck)', bo: 'TĂNG ÁP (Boost)', bb: 'HỖN HỢP (Buck-Boost)' };
+  jk.forEach(j => { const k = j.id.slice(0, 2); if (!j.grp) j.grp = grpName[k] || 'BỘ 4 KHÓA'; });
+  defMod({
+    id: 'p2', short: 'PE-802', w: 60, h: 30, bg: '#d9dde3', ink: '#1f2533', edge: '#a8adb6', jacks: jk,
+    knobs: [{ x: 8, y: 9, p: 'duty', label: 'PWM Adj.' }, { x: 37.4, y: 19.2, p: 'q4', label: '' }],
+    paint(P) {
+      P.title('PE-802 · BỘ BIẾN ĐỔI ĐIỆN ÁP DC-DC', 30, 1.35);
+      P.block(1, 2.5, 10.4, 13, 'Upwm OUTPUT'); P.block(1, 16, 10.4, 12.5, '+12VDC INPUT');
+      const B = (x, y, t) => P.block(x, y, 15.8, 12.5, t);
+      B(12, 2.5, '1. HẠ ÁP (Buck)'); B(28.5, 2.5, '2. TĂNG ÁP (Boost)'); B(12, 16, '3. HỖN HỢP (Buck-Boost)'); B(28.5, 16, '4. BỘ 4 KHÓA');
+      P.block(45, 2.5, 14, 26, 'TẢI R, C');
+      const q = (x, y) => { P.rrect(x - 1, y - .7, 2, 1.4, .15, { lw: .07 }); P.text('Q1', x, y, { size: .45 }); };
+      // Buck: +Uin – Q1 – nút – L1 – +Uout; D1 từ ray dưới lên nút
+      { const bx = 12, by = 2.5, t = by + 3.4, b = by + 10.3; P.line([[bx + 2.4, t], [bx + 4.6, t]]); q(bx + 5.6, t); P.line([[bx + 6.6, t], [bx + 10.5, t]]);
+        P.two('ind', [bx + 10.5, t], [bx + 13.9, t]); P.two('diode', [bx + 10.5, b], [bx + 10.5, t]); P.line([[bx + 2.4, b], [bx + 13.1, b]]);
+        P.line([[bx + 5.6, t + .7], [bx + 5.6, by + 6.9]], { w: .05 }); P.line([[bx + 8.4, t], [bx + 8.4, by + 6.9]], { w: .05 }); P.text('L1', bx + 12.2, t - 1, { size: .4 }); P.text('D1', bx + 11.6, by + 7, { size: .4 }); }
+      // Boost: +Uin – L1 – nút – D1 – +Uout; Q1 từ nút xuống ray dưới
+      { const bx = 28.5, by = 2.5, t = by + 3.4, b = by + 10.3; P.two('ind', [bx + 1.6, t], [bx + 8.4, t]); P.two('diode', [bx + 8.4, t], [bx + 13.9, t]);
+        P.line([[bx + 8.4, t], [bx + 8.4, by + 4.9]]); q(bx + 8.4, by + 5.6); P.line([[bx + 8.4, by + 6.3], [bx + 8.4, by + 6.9]]); P.line([[bx + 2.4, b], [bx + 13.1, b]]); P.line([[bx + 8.4, by + 8.3], [bx + 8.4, b]], { w: .05 });
+        P.line([[bx + 5.6, by + 6.9], [bx + 5.6, by + 5.6], [bx + 7.4, by + 5.6]], { w: .05 }); P.text('L1', bx + 5, t - 1, { size: .4 }); P.text('D1', bx + 11.2, t - 1, { size: .4 }); }
+      // Buck-Boost: +Uin – Q1 – nút; L1 từ nút xuống ray dưới (+Uout); D1 từ −Uout về nút
+      { const bx = 12, by = 16, t = by + 3.4, b = by + 10.3; P.line([[bx + 2.4, t], [bx + 4.6, t]]); q(bx + 5.6, t); P.line([[bx + 6.6, t], [bx + 10.5, t]]);
+        P.two('diode', [bx + 13.9, t], [bx + 10.5, t]); P.two('ind', [bx + 10.5, t], [bx + 10.5, b]); P.line([[bx + 2.4, b], [bx + 13.1, b]]);
+        P.line([[bx + 5.6, t + .7], [bx + 5.6, by + 6.9]], { w: .05 }); P.line([[bx + 8.4, t], [bx + 8.4, by + 6.9]], { w: .05 }); P.text('L1', bx + 11.6, by + 6, { size: .4 }); P.text('D1', bx + 12.2, t - 1, { size: .4 }); }
+      // Bộ 4 khóa: cầu H Q1..Q4 + công tắc chọn nhánh
+      { const bx = 28.5, by = 16; P.rrect(bx + 9.4, by + 7.3, 2.8, 4.4, .2, { lw: .07 }); P.text('Q1..Q4', bx + 10.8, by + 9.5, { size: .4 });
+        P.text('Q1-Q2', bx + 7, by + 5.6, { size: .38 }); P.text('Q3-Q4', bx + 11.2, by + 5.6, { size: .38 }); P.text('ON', bx + 9.1, by + 6.3, { size: .36 });
+        P.line([[bx + 12.2, by + 9.5], [bx + 13.1, by + 9.5]], { w: .05 }); P.text('VL', bx + 15, by + 7.7, { size: .4 }); }
+      // tải
+      P.two('res', [48.6, 7.2], [48.6, 15.6]); P.text('R 47Ω', 48.6, 19.4, { size: .5 });
+      P.line([[55.2, 8], [55.2, 11.1]]); P.line([[54, 11.1], [56.4, 11.1]], { w: .1 }); P.line([[54, 11.9], [56.4, 11.9]], { w: .1 }); P.line([[55.2, 11.9], [55.2, 14.8]]);
+      P.text('C 470µF', 55.2, 19.4, { size: .5 }); P.text('Nối song song R, C ở đầu ra', 52, 25, { size: .4, bold: false });
+    }
+  });
+}
+
+defMod({
+  id: 'osc', short: 'Dao động ký', w: 30, h: 17, bg: '#2d323b', ink: '#dfe5ec', edge: '#1f2329',
+  jacks: [
+    J('c1p', 'CH1', 23.5, 5.2, 'yellow', { grp: 'Que đo', meas: true }), J('c1n', 'GND', 27.5, 5.2, 'black', { grp: 'Kẹp CH1', meas: true }),
+    J('c2p', 'CH2', 23.5, 11.4, 'cyan', { grp: 'Que đo', meas: true }), J('c2n', 'GND', 27.5, 11.4, 'black', { grp: 'Kẹp CH2', meas: true }),
+  ],
+  screen: { x: 1.2, y: 2.4, w: 19.5, h: 13 },
+  paint(P) {
+    P.text('DAO ĐỘNG KÝ 2 KÊNH', 10.95, 1.35, { size: .6 });
+    P.rrect(.8, 2, 20.3, 13.8, .4, { fill: '#111', stroke: '#555' });
+    P.text('CH1', 25.5, 2.9, { size: .5 }); P.text('CH2', 25.5, 9.1, { size: .5 });
+    P.text('GND hai kênh chung vỏ máy', 25.5, 15.6, { size: .36, bold: false });
+  }
+});
+
+/* =========================================================================
+   3. BÀI THỰC HÀNH
+   ========================================================================= */
+const SYM_LAMP_E1 = [['e1.lpa', 'e1.lpb']];
+const SYM_L1 = [['m.l1a', 'm.l1b']];
+const SYM_L = [['m.La', 'm.Lb']];
+const SYM_R01 = [['m.r01a', 'm.r01b']], SYM_R02 = [['m.r02a', 'm.r02b']];
+const SYM_TFA = [['sv.G1', 'sv.G11'], ['sv.K1', 'sv.K11']];
+const SYM_TFB = [['sv.G2', 'sv.G21'], ['sv.K2', 'sv.K21']];
+// TCA785 đồng bộ trực tiếp từ ~24VAC X–Y qua biến áp TF5 (Hình 8.10) → không cần nối 220VAC
+const SV_PWR = [['sv.p12', 'sv.in_p'], ['sv.gnd', 'sv.in_n']];
+const AC = () => 0.02;
+
+function exSwitch(kind) {
+  const D = { bjt: ['bG', 'bE', 'bC', 0.8, 0.3, 'Transistor', 'B (bazơ)', 'E', 'C'], mos: ['mG', 'mS', 'mD', 10, 0.2, 'MOSFET', 'G', 'S', 'D'], igbt: ['iG', 'iE', 'iC', 10, 1.5, 'IGBT', 'G', 'E', 'C'] }[kind];
+  const [G, E, C, vg, von, name, gN, eN, cN] = D;
+  return {
+    id: '7.2-' + kind, grp: 7, title: `7.1.2 Điều khiển ${name} bằng xung`, mods: ['e1'],
+    goal: `Điều khiển đóng/cắt ${name} bằng chùm xung (máy phát 555 + đa hài 1 kHz) qua biến thế xung cách ly, tải là đèn Đ1.`,
+    steps: [
+      'Tắt nguồn trước khi đấu dây.',
+      'Nối OUT (máy phát 555) → IN1 (biến thế xung cách ly).',
+      'Nối OUT2 (mạch đa hài) → IN2 (biến thế xung cách ly).',
+      `Nối A (biến thế cách ly) → ${gN} của ${name}; nối B (biến thế cách ly) → ${eN}.`,
+      `Nối ${eN} của ${name} → GND (âm nguồn 12VDC PS-012).`,
+      `Nối ${cN} → một đầu đèn Đ1 (khối LOAD); đầu còn lại của đèn → +12V.`,
+      'Cấp nguồn khối điều khiển: +12V (PS-012) → “+” 12VDC IN; GND → “−” 12VDC IN.',
+      `Bật nguồn. Đo: CH1 → A, GND → B (xung kích); CH2 → ${cN}. Xoay P1 (tần số 555) và quan sát đèn.`,
+    ],
+    note: `${name} chỉ dẫn khi có xung ở cực điều khiển; xung mất thì khoá ngắt ngay → đèn nhấp nháy theo tần số 555 (khác SCR là tự giữ).`,
+    conns: [['e1.o555', 'e1.isoIn1'], ['e1.mv2', 'e1.isoIn2'], ['e1.isoA', 'e1.' + G], ['e1.isoB', 'e1.' + E], ['e1.' + E, 'ps.gnd'], ['e1.' + C, 'e1.lpa'], ['e1.lpb', 'ps.p12'], ['ps.p12', 'e1.in_p'], ['ps.gnd', 'e1.in_n']],
+    sym: [SYM_LAMP_E1],
+    pot: { 'e1.o555': (t, s) => s555(t, s) ? 12 : 0, 'e1.mv2': t => mv(t) ? 12 : 0, 'e1.isoA': (t, s) => burst(t, s) ? vg : 0, ['e1.' + C]: (t, s) => burst(t, s) ? von : 12 },
+    knobs: ['f555'], scope: { v1: kind === 'bjt' ? 0.5 : 5, v2: 5, td: 20 }, trig: s => 1 / s.f555, load: ['e1.lpa', 'e1.lpb'],
+  };
+}
+
+function exSCRasync(triac) {
+  const G = triac ? 'tG' : 'sG', K = triac ? 'tT1' : 'sK', A = triac ? 'tT2' : 'sA', n = triac ? 'Triac' : 'SCR';
+  return {
+    id: triac ? '8.1.2' : '8.1.1', grp: 8, title: `8.1.${triac ? 2 : 1} Điều khiển không đồng bộ ${n} (nguồn DC)`, mods: ['e1'],
+    goal: `Kích ${n} bằng chùm xung từ máy phát 555 + đa hài (Hình 8.${triac ? 5 : 4}), tải đèn, nguồn tải 12VDC.`,
+    steps: [
+      'Tắt nguồn. Cấp nguồn khối điều khiển: +12V → “+” 12VDC IN, GND → “−”.',
+      'Nối OUT (555) → IN1 và OUT2 (đa hài) → IN2 của biến thế xung cách ly.',
+      `Nối A (biến thế) → G của ${n}; B (biến thế) → ${triac ? 'T1' : 'K'}.`,
+      `Nối +12V → một đầu đèn Đ1; đầu kia của đèn → ${triac ? 'T2' : 'A'} của ${n}.`,
+      `Nối ${triac ? 'T1' : 'K'} → GND.`,
+      `Bật nguồn. Đo: CH1 → A/B biến thế; CH2 → ${triac ? 'T2' : 'anode A'} (GND chung). Thay đổi P1 quan sát.`,
+    ],
+    note: `Với nguồn một chiều, ${n} chỉ cần một xung là tự giữ dẫn → đèn sáng liên tục, xoay P1 không làm đèn tắt. Muốn tắt phải ngắt nguồn tải.`,
+    conns: [['ps.p12', 'e1.in_p'], ['ps.gnd', 'e1.in_n'], ['e1.o555', 'e1.isoIn1'], ['e1.mv2', 'e1.isoIn2'], ['e1.isoA', 'e1.' + G], ['e1.isoB', 'e1.' + K], ['ps.p12', 'e1.lpa'], ['e1.lpb', 'e1.' + A], ['e1.' + K, 'ps.gnd']],
+    sym: [SYM_LAMP_E1],
+    pot: { 'e1.o555': (t, s) => s555(t, s) ? 12 : 0, 'e1.mv2': t => mv(t) ? 12 : 0, 'e1.isoA': (t, s) => burst(t, s) ? 1.1 : 0, ['e1.' + A]: () => triac ? 1.3 : 1.0 },
+    knobs: ['f555'], scope: { v1: 1, v2: 5, td: 20 }, trig: s => 1 / s.f555, load: ['e1.lpa', 'e1.lpb'],
+  };
+}
+
+// R01 (đo dòng I_AC) và R02 trên Hình 8.8–8.11 là điện trở sun có sẵn trong module của giáo trình → ở đây không bắt buộc
+const semiConns = (r, load) => [...SV_PWR, ...(r ? [['sv.X', 'm.r01b'], ['m.r01a', 'sv.s1A']] : [['sv.X', 'sv.s1A']]), ['sv.s1A', 'sv.d1K'], ['sv.Y', 'sv.s2A'], ['sv.Y', 'sv.d2K'],
+  ...(r ? [['sv.s1K', 'm.r02b'], ['m.r02a', 'sv.s2K']] : [['sv.s1K', 'sv.s2K']]), ['sv.d1A', 'sv.d2A'], ['sv.G1', 'sv.s1G'], ['sv.K1', 'sv.s1K'], ['sv.G2', 'sv.s2G'], ['sv.K2', 'sv.s2K'], ...load];
+const fullConns = (r, load) => [...SV_PWR, ...(r ? [['sv.X', 'm.r01b'], ['m.r01a', 'sv.s1A']] : [['sv.X', 'sv.s1A']]), ['sv.s1A', 'sv.s3K'], ['sv.Y', 'sv.s2A'], ['sv.Y', 'sv.s4K'],
+  ...(r ? [['sv.s1K', 'm.r02b'], ['m.r02a', 'sv.s2K']] : [['sv.s1K', 'sv.s2K']]), ['sv.s3A', 'sv.s4A'], ['sv.G1', 'sv.s1G'], ['sv.K1', 'sv.s1K'], ['sv.G11', 'sv.s4G'], ['sv.K11', 'sv.s4K'],
+  ['sv.G2', 'sv.s2G'], ['sv.K2', 'sv.s2K'], ['sv.G21', 'sv.s3G'], ['sv.K21', 'sv.s3K'], ...load];
+const R01_STEP = 'Tùy chọn – đo dòng I_AC (Bước 4 giáo trình): thay dây X → A1 bằng X → R01 (PE-803A) → A1; đặt GND dao động ký ở X, CH2 ở đầu R01 phía SCR1 → u_R01 = I_AC·R01. (R02 trên hình là sun đo dòng SCR1, không bắt buộc.)';
+function exSemi(rl) {
+  const load = rl ? [['sv.s2K', 'm.l1a'], ['m.l1b', 'm.La'], ['m.Lb', 'sv.d1A']] : [['sv.s2K', 'm.l1a'], ['m.l1b', 'sv.d1A']];
+  // dòng phía xoay chiều (quy ra áp trên R01): tải R cùng dạng áp; tải RL ≈ ±I_d khi SCR dẫn, 0 khi thả trôi
+  const iac = rl ? (t, s) => { const th = TH(t); return th >= s.a && th <= Math.PI ? uavgSemi(s) : th >= Math.PI + s.a ? -uavgSemi(s) : 0; }
+    : (t, s) => { const u = bridgeR(t, s); return (u[0] - u[1]) * Math.sign(vX(t)); };
+  const pot = { 'sv.s1A': (t, s) => vX(t) - KSH * iac(t, s), 'sv.s2K': (t, s) => bridgeR(t, s)[0], 'sv.s1K': (t, s) => bridgeR(t, s)[0], 'sv.d1A': (t, s) => bridgeR(t, s)[1], 'sv.s1G': (t, s) => bridgeR(t, s)[0] + pulseA(t, s), 'sv.s2G': (t, s) => bridgeR(t, s)[0] + pulseB(t, s) };
+  if (rl) pot['m.l1b'] = (t, s) => bridgeR(t, s)[0] - uavgSemi(s);
+  return {
+    id: rl ? '8.2.2' : '8.2.1', grp: 8, title: `8.2.${rl ? 2 : 1} Chỉnh lưu cầu bán phần (SCR + Diode), tải ${rl ? 'RL' : 'R'}`, mods: ['sv'],
+    goal: `Chỉnh lưu cầu 1 pha bán phần: SCR1, SCR2 nhóm trên, D1, D2 nhóm dưới; tải ${rl ? 'đèn D1 nối tiếp cuộn cảm L' : 'đèn D1 (tải trở)'} (Hình 8.${rl ? 9 : 8}).`,
+    steps: [
+      'Tắt nguồn. Cấp nguồn mạch kích: +12 (12VDC OUT) → +12 (12VDC INPUT); GND → GND.',
+      'Nhánh X: nối X → A1 (SCR1) và A1 (SCR1) → K1 (D1).',
+      'Nhánh Y: nối Y → A2 (SCR2) và Y → K2 (D2).',
+      'Nối chung K1 (SCR1) – K2 (SCR2) → cực +Ud; nối chung A1 (D1) – A2 (D2) → cực −Ud.',
+      rl ? 'Tải RL: +Ud → đèn D1 → cuộn cảm L → −Ud.' : 'Tải R: +Ud → đèn D1 → −Ud.',
+      'Xung kích: TF-A (G1/K1) → G/K của SCR1; TF-B (G2/K2) → G/K của SCR2.',
+      'Bật nguồn, đo Ud (CH1 → +Ud, GND → −Ud). Xoay Vref Adj (α) quan sát và ghi Ud theo α; đặt α = 90°.',
+      R01_STEP,
+    ],
+    note: rl ? 'Với tải cảm, dòng được duy trì qua SCR và diode cùng nhánh (thả trôi) → Ud không âm, dòng tải gần như phẳng, đèn sáng đều. Ud = 0,45·U·(1+cosα).' : 'Ud = 0,45·U·(1+cosα) ≈ 10,8·(1+cosα) V. α tăng → Ud giảm.',
+    conns: semiConns(false, load), alt: [semiConns(true, load)],
+    sym: [SYM_L1, SYM_TFA, SYM_TFB, SYM_R01, SYM_R02, ...(rl ? [SYM_L] : [])], pot,
+    knobs: ['alpha'], scope: { v1: 10, v2: 10, td: 5 }, trig: AC, load: ['m.l1a', 'm.l1b'],
+  };
+}
+
+function exFull(rl) {
+  const f = rl ? bridgeFullRL : bridgeR;
+  const load = rl ? [['sv.s2K', 'm.l1a'], ['m.l1b', 'm.La'], ['m.Lb', 'sv.s3A']] : [['sv.s2K', 'm.l1a'], ['m.l1b', 'sv.s3A']];
+  const iac = rl ? (t, s) => (f(t, s)[1] === 0 ? 1 : -1) * uavgFull(s) : (t, s) => { const u = f(t, s); return (u[0] - u[1]) * Math.sign(vX(t)); };
+  const pot = {
+    'sv.s1A': (t, s) => vX(t) - KSH * iac(t, s), 'sv.s2K': (t, s) => f(t, s)[0],
+    'sv.s1K': (t, s) => f(t, s)[0], 'sv.s3A': (t, s) => f(t, s)[1],
+    'sv.s1G': (t, s) => f(t, s)[0] + pulseA(t, s), 'sv.s4G': (t, s) => pulseA(t, s),
+    'sv.s2G': (t, s) => f(t, s)[0] + pulseB(t, s), 'sv.s3G': (t, s) => vX(t) + pulseB(t, s),
+  };
+  if (rl) pot['m.l1b'] = (t, s) => f(t, s)[0] - uavgFull(s);
+  return {
+    id: rl ? '8.2.4' : '8.2.3', grp: 8, title: `8.2.${rl ? 4 : 3} Chỉnh lưu cầu toàn phần (4 SCR), tải ${rl ? 'RL' : 'R'}`, mods: ['sv'],
+    goal: `Chỉnh lưu cầu 1 pha điều khiển hoàn toàn với 4 SCR, tải ${rl ? 'đèn D1 nối tiếp L' : 'đèn D1'} (Hình 8.${rl ? 11 : 10}).`,
+    steps: [
+      'Tắt nguồn. Cấp nguồn mạch kích: +12 → +12 (INPUT); GND → GND (INPUT).',
+      'Nhánh X: X → A1 (SCR1) và A1 (SCR1) → K3 (SCR3). Nhánh Y: Y → A2 (SCR2) và Y → K4 (SCR4).',
+      'Nối chung K1 – K2 (SCR1, SCR2) → +Ud; nối chung A3 – A4 (SCR3, SCR4) → −Ud.',
+      rl ? 'Tải: +Ud → đèn D1 → cuộn cảm L → −Ud.' : 'Tải: +Ud → đèn D1 → −Ud.',
+      'Xung TF-A (X dương): G1/K1 → SCR1 và G1-1/K1-1 → SCR4.',
+      'Xung TF-B (Y dương): G2/K2 → SCR2 và G2-1/K2-1 → SCR3.',
+      'Bật nguồn, đo Ud; xoay α và ghi đặc tuyến Ud(α).',
+      R01_STEP,
+    ],
+    note: rl ? 'Tải cảm lớn → dòng liên tục, Ud có đoạn âm; Ud = 0,9·U·cosα (mô hình lý tưởng dòng liên tục).' : 'Tải trở: Ud = 0,45·U·(1+cosα), giống cầu bán phần.',
+    conns: fullConns(false, load), alt: [fullConns(true, load)],
+    sym: [SYM_L1, SYM_TFA, SYM_TFB, SYM_R01, SYM_R02, ...(rl ? [SYM_L] : [])], pot,
+    knobs: ['alpha'], scope: { v1: 10, v2: 10, td: 5 }, trig: AC, load: ['m.l1a', 'm.l1b'],
+  };
+}
+
+// Bài 9.3.1: bộ biến đổi DC-DC trên PE-802 (xung PWM 1 kHz, tỉ lệ D chỉnh bằng PWM Adj)
+const FPWM = 1000, UIN = 12;
+const pwmOn = (t, s) => frac(t * FPWM) < s.D;
+const rip = (t, s) => 1 + 0.03 * (Math.abs(2 * frac(t * FPWM - s.D / 2) - 1) - 0.5); // gợn sóng nhỏ trên tụ
+const P2_PWR = [['ps.p12', 'p2.in_p'], ['ps.gnd', 'p2.in_n']];
+const P2_STEP0 = ['Tắt các nguồn điện.', 'Cấp nguồn PE-802: +12V (PS-012) → “+” 12VDC INPUT; GND → “−”.'];
+function exDC(kind) {
+  const k = { buck: 'bk', boost: 'bo', bb: 'bb' }[kind];
+  const uo = s => kind === 'buck' ? UIN * s.D : kind === 'boost' ? UIN / (1 - Math.min(s.D, .85)) : UIN * Math.min(s.D, .85) / (1 - Math.min(s.D, .85));
+  const pot = { ['p2.' + k + 'Op']: (t, s) => (kind === 'bb' ? 0 : uo(s) * rip(t, s)) };
+  if (kind === 'bb') pot['p2.bbOn'] = (t, s) => -uo(s) * rip(t, s);
+  if (kind === 'buck') { const sw = (t, s) => pwmOn(t, s) ? UIN : -0.7; pot['p2.bkGn'] = sw; pot['p2.bkGp'] = (t, s) => sw(t, s) + (pwmOn(t, s) ? 12 : 0); }
+  if (kind === 'boost') pot['p2.boGp'] = (t, s) => pwmOn(t, s) ? 12 : 0;
+  if (kind === 'bb') { const sw = (t, s) => pwmOn(t, s) ? UIN : -uo(s) - 0.7; pot['p2.bbGn'] = sw; pot['p2.bbGp'] = (t, s) => sw(t, s) + (pwmOn(t, s) ? 12 : 0); }
+  const name = { buck: ['a', 'hạ áp (Buck)', '9.3', 'U0 = D·Uin'], boost: ['b', 'tăng áp (Boost)', '9.4', 'U0 = Uin / (1 − D)'], bb: ['c', 'hỗn hợp (Buck-Boost)', '9.5', 'U0 = Uin·D / (1 − D) (đảo cực so với lối vào)'] }[kind];
+  const oP = 'p2.' + k + 'Op', oN = kind === 'bb' ? 'p2.bbOn' : 'p2.' + k + 'On';
+  return {
+    id: '9.1' + name[0], grp: 9, title: `9.3.1${name[0]} Bộ biến đổi DC-DC ${name[1]}`, mods: ['p2'], lampRated: 47,
+    goal: `Khảo sát bộ biến đổi DC-DC ${name[1]} trên bảng PE-802 (Hình ${name[2]}): thay đổi độ rộng xung D bằng núm PWM Adj và quan sát điện áp ra U0. ${name[3]}.`,
+    steps: [...P2_STEP0,
+      `Cấp lối vào khối ${name[1]}: +12V → +Uin; GND → −Uin.`,
+      'Nối máy phát xung: Upwm OUTPUT “+” → Upwm+ (cực G của MOSFET Q1); Upwm OUTPUT “−” → Upwm− (cực S).',
+      kind === 'bb' ? 'Nối tải: +Uout (chốt dưới) → đầu đỏ R và cực + của tụ C; −Uout (chốt trên) → đầu đen R và cực − của C.' : 'Nối tải: +Uout → đầu đỏ R và cực + của tụ C; −Uout → đầu đen R và cực − của C (R, C song song).',
+      'Bước 2: vặn PWM Adj về rìa trái (D nhỏ nhất).',
+      'Bước 3–4: bật nguồn. CH1 → Upwm+ (GND → Upwm−): xung điều khiển; CH2 → +Uout (GND → −Uout): điện áp ra U0. Tăng dần PWM Adj, ghi U0 theo D.',
+    ],
+    note: { buck: 'Q1 đóng: dòng từ nguồn qua L1 ra tải, L1 tích năng lượng; Q1 ngắt: L1 giữ dòng chạy vòng qua D1 (thả trôi). Trung bình U0 = D·Uin < Uin.',
+      boost: 'Q1 đóng: L1 nối thẳng vào nguồn, tích năng lượng (tụ C cấp cho tải); Q1 ngắt: điện áp L1 cộng với Uin đẩy dòng qua D1 nạp tụ → U0 = Uin/(1−D) > Uin. Mô phỏng giới hạn D ≤ 85 %.',
+      bb: 'Q1 đóng: L1 tích năng lượng từ nguồn; Q1 ngắt: L1 xả qua D1 ra tải với cực tính ngược. U0 = Uin·D/(1−D): D < 50 % hạ áp, D > 50 % tăng áp.' }[kind],
+    conns: [...P2_PWR, ['ps.p12', 'p2.' + k + 'Up'], ['ps.gnd', 'p2.' + k + 'Un'], ['p2.pwP', 'p2.' + k + 'Gp'], ['p2.pwN', 'p2.' + k + 'Gn'],
+      [oP, 'p2.Rp'], [oP, 'p2.Cp'], [oN, 'p2.Rn'], [oN, 'p2.Cn']],
+    sym: [[['p2.Rp', 'p2.Rn']]], pot,
+    knobs: ['duty'], scope: { v1: 10, v2: kind === 'buck' ? 5 : 20, td: 0.2 }, trig: () => 1 / FPWM, load: ['p2.Rp', 'p2.Rn'],
+  };
+}
+function ex4Q() {
+  const vl = (t, s) => pwmOn(t, s) ? UIN : 0;
+  return {
+    id: '9.1d', grp: 9, title: '9.3.1d Bộ biến đổi DC-DC 4 khóa (Four-Quadrant Chopper)', mods: ['p2'], lampRated: 47,
+    goal: 'Khảo sát cầu H 4 khóa trên PE-802: công tắc chọn cặp Q1-Q2 hoặc Q3-Q4 để đảo chiều điện áp tải, độ rộng xung D quyết định độ lớn: VL = ±D·Uin.',
+    steps: [...P2_STEP0,
+      'Cấp lối vào khối 4 khóa: +12V → +Uin; GND → −Uin.',
+      'Nối Upwm OUTPUT “+” → Upwm+ và “−” → Upwm− của khối 4 khóa (các cực G của Q1–Q4 đã nối sẵn qua công tắc chọn nhánh).',
+      'Nối tải R: LOAD “+” → đầu đỏ R; LOAD “−” → đầu đen R.',
+      'Vặn PWM Adj về rìa trái. Đặt công tắc ở Q1-Q2 ON, bật nguồn: CH1 → Upwm+, CH2 → LOAD “+” (GND → LOAD “−”).',
+      'Chuyển công tắc sang Q3-Q4 ON và quan sát lại; tăng dần PWM Adj, ghi VL theo D.',
+    ],
+    note: 'Q1-Q2 ON: Q1 và Q2 (chéo nhau) đóng ngắt → dòng qua tải từ + sang −, VL = +D·Uin. Q3-Q4 ON: Q3 và Q4 đóng ngắt → dòng đảo chiều, VL = −D·Uin. Đây là bộ băm áp đảo chiều dùng để điều khiển động cơ DC quay 2 chiều.',
+    conns: [...P2_PWR, ['ps.p12', 'p2.qUp'], ['ps.gnd', 'p2.qUn'], ['p2.pwP', 'p2.qGp'], ['p2.pwN', 'p2.qGn'], ['p2.qLp', 'p2.Rp'], ['p2.qLn', 'p2.Rn']],
+    sym: [[['p2.Rp', 'p2.Rn']]],
+    pot: { 'p2.qGp': (t, s) => pwmOn(t, s) ? 12 : 0, 'p2.qLp': (t, s) => s.q4 ? 0 : vl(t, s), 'p2.qLn': (t, s) => s.q4 ? vl(t, s) : 0 },
+    knobs: ['duty', 'q4'], scope: { v1: 10, v2: 10, td: 0.2 }, trig: () => 1 / FPWM, load: ['p2.Rp', 'p2.Rn'],
+  };
+}
+
+const E1_PWR_STEPS = [
+  'Tắt nguồn. Cấp nguồn PE-801: +12V (PS-012) → “+” 12VDC INPUT; GND → “−”.',
+  'Đồng bộ: X (~24VAC, Bộ nguồn) → L1 của PHASE-SYNCHRONOUS CONTROLLER; Y → N.',
+];
+const E1_TRIAC_STEP = 'Xung kích (đúng Hình 8.7 – chỉ dùng 1 biến thế xung TF1): A1 → G, B1 → T1 của Triac.';
+const E1_TRIAC = [['ps.p12', 'e1.in_p'], ['ps.gnd', 'e1.in_n'], ['ps.X', 'e1.psL'], ['ps.Y', 'e1.psN'],
+  ['e1.a1', 'e1.tG'], ['e1.b1', 'e1.tT1'], ['ps.X', 'e1.tT2']];
+const E1_SCH_NOTE = 'Giáo trình vẽ theo module PEC-502/PE-514; trên PE-801: OUT1/A ≡ A1, OUT1/B ≡ B1 (TF1), lối vào X–Y đồng bộ ≡ L1/N. Không dùng A2/B2 (TF2).';
+
+// 8.1.3 (B9): Triac điều khiển đồng bộ bằng khối PHASE-SYNCHRONOUS CONTROLLER (TCA785) ngay trên PE-801
+function exTriacE1() {
+  // Hình 8.7: X → R → T2, T1 → Y; điện áp T2 = áp trên Triac (≈ 0 khi dẫn)
+  const tT2 = (t, s) => (condR(t, s) ? 0 : vX(t));
+  return {
+    id: '8.1.3b', grp: 8, title: '8.1.3 (B9) Điều khiển đồng bộ Triac, tải trở', mods: ['e1'],
+    goal: 'Thay SCR bằng Triac (Hình 8.7), dùng khối PHASE-SYNCHRONOUS CONTROLLER của PE-801 để kích: Triac dẫn cả hai nửa chu kỳ → điều áp xoay chiều trên tải trở.',
+    steps: [
+      'Tắt nguồn. Cấp nguồn PE-801: +12V (PS-012) → “+” 12VDC INPUT; GND → “−”.',
+      'Đồng bộ: X (~24VAC, Bộ nguồn) → L1 của PHASE-SYNCHRONOUS CONTROLLER; Y → N.',
+      'Mạch tải (đúng Hình 8.7): X → chốt trên đèn Đ1 (khối LOAD của PE-801); chốt dưới Đ1 → T2 của Triac; T1 → Y.',
+      E1_TRIAC_STEP + ' (A1/B1 ≡ OUT1/A, OUT1/B trên Hình 8.7).',
+      'Bật nguồn. CH1 → X (GND → Y): điện áp nguồn; CH2 → T2: điện áp trên Triac (u_tải = u_X − u_T2). Xoay Vref adj. (α) quan sát.',
+    ],
+    note: 'Triac dẫn ở cả nửa dương và nửa âm từ góc α → điện áp tải là sin bị cắt pha đối xứng; áp trên Triac là phần sin còn lại trước góc α. Nguồn đồng bộ (L1/N) và nguồn tải phải cùng là X–Y để xung đúng pha.',
+    schNote: E1_SCH_NOTE,
+    conns: [...E1_TRIAC.filter(c => c[1] !== 'e1.tT2'), ['ps.X', 'e1.lpa'], ['e1.lpb', 'e1.tT2'], ['e1.tT1', 'ps.Y']],
+    sym: [SYM_LAMP_E1], pot: { 'e1.tT2': tT2, 'e1.tG': (t, s) => pulseA(t, s) + pulseB(t, s) },
+    knobs: ['alpha'], scope: { v1: 10, v2: 10, td: 5 }, trig: AC, load: ['e1.lpa', 'e1.lpb'],
+  };
+}
+
+function exTriac(rl) {
+  const tT1 = rl ? (t, s) => (triacRL(t, s).on ? vX(t) : 0) : (t, s) => (condR(t, s) ? vX(t) : 0);
+  const pot = { 'e1.tT1': tT1, 'e1.tG': (t, s) => tT1(t, s) + pulseA(t, s) + pulseB(t, s) };
+  if (rl) pot['e1.lpb'] = (t, s) => { const r = triacRL(t, s); return r.on ? vX(t) - VAC * Math.cos(PHI) * r.i : 0; };
+  const load = rl ? [['e1.tT1', 'e1.lpa'], ['e1.lpb', 'm.La'], ['m.Lb', 'ps.Y']] : [['e1.tT1', 'e1.lpa'], ['e1.lpb', 'ps.Y']];
+  return {
+    id: rl ? '9.2' : '8.1.3b', grp: rl ? 9 : 8, title: rl ? '9.3.2 Biến đổi điện áp AC 1 pha dùng Triac, tải RL' : '8.1.3 (B9) Điều khiển đồng bộ Triac, tải trở', mods: ['e1'], schNote: E1_SCH_NOTE,
+    goal: rl ? 'Bộ biến đổi xoay chiều – xoay chiều 1 pha: Triac nối tiếp tải đèn Đ1 (cùng trên PE-801) + cuộn cảm L của PE-803A (Hình 9.8).' : 'Thay SCR bằng Triac (Hình 8.7): Triac dẫn cả hai nửa chu kỳ → điều áp xoay chiều trên tải trở.',
+    steps: [...E1_PWR_STEPS,
+      'Nối X → T2 của Triac (PE-801).',
+      rl ? 'Nối T1 → chốt trên đèn Đ1 (LOAD, PE-801); chốt dưới Đ1 → cuộn cảm L (PE-803A) → Y.' : 'Nối T1 → chốt trên đèn Đ1 (LOAD, PE-801); chốt dưới Đ1 → Y.',
+      E1_TRIAC_STEP,
+      'Bật nguồn. CH1 → X (GND → Y): điện áp nguồn; CH2 → T1: điện áp trên tải. Xoay Vref adj. (α) quan sát.',
+    ],
+    note: rl ? 'Với tải RL (φ≈45°), dòng tiếp tục chảy sau điểm 0 của điện áp tới góc tắt β; khi α < φ Triac dẫn liên tục → điện áp tải là hình sin đầy đủ.' : 'Triac dẫn ở cả nửa dương và nửa âm từ góc α → điện áp tải là sin bị cắt pha đối xứng.',
+    conns: [...E1_TRIAC, ...load],
+    sym: [SYM_LAMP_E1, ...(rl ? [SYM_L] : [])], pot,
+    knobs: ['alpha'], scope: { v1: 10, v2: 10, td: 5 }, trig: AC, load: ['e1.lpa', 'e1.lpb'],
+  };
+}
+
+// Bài 9.3.2: biến đổi điện áp AC 1 pha tải R, đo cả U_Z và I_Z (qua điện trở sun R01 nối tiếp tải)
+const KSH = 0.1; // tỉ lệ áp trên R01 so với toàn tải (giả định R01 = 10 Ω, đèn ≈ 90 Ω)
+function exACR() {
+  const uz = (t, s) => (condR(t, s) ? vX(t) : 0);
+  return {
+    id: '9.2r', grp: 9, title: '9.3.2 Biến đổi điện áp AC 1 pha dùng Triac, tải R', mods: ['e1'], schNote: E1_SCH_NOTE,
+    goal: 'Lắp mạch biến đổi điện áp xoay chiều 1 pha: Triac nối tiếp tải trở – khối LOAD có sẵn trên PE-801 (đèn Đ1 nối tiếp sẵn điện trở sun R01). Đo và vẽ điện áp AC đồng bộ, điện áp tải U_Z và dòng tải I_Z.',
+    steps: [
+      ...E1_PWR_STEPS,
+      'Nối X → T2 của Triac (PE-801).',
+      'Nối T1 → chốt trên đèn Đ1 (khối LOAD, PE-801); chốt đen dưới R01 → Y. (Đ1 và R01 đã nối tiếp sẵn bên trong qua chốt đỏ giữa.)',
+      E1_TRIAC_STEP,
+      'Bật nguồn. Đo 1: CH1 → X, GND → Y → điện áp AC đồng bộ u_AC.',
+      'Đo 2: CH2 → T1 (GND vẫn ở Y) → điện áp tải U_Z. Xoay Vref Adj, vẽ u_AC và U_Z tại α = 60°, 90°, 120°.',
+      'Đo 3: chuyển CH2 → chốt đỏ giữa (dưới Đ1, đầu trên R01) → u_R01 = I_Z·R01 ⇒ I_Z = u_R01 / R01 (đặt CH2 = 1 V/div). Vẽ I_Z.',
+    ],
+    note: 'Tải trở nên I_Z cùng dạng và cùng pha với U_Z: sin bị cắt pha đối xứng, bắt đầu dẫn ở α và tắt tại điểm 0. U_Z(hd) = U·√(1 − α/π + sin2α/2π). Mô phỏng giả định R01 = 10 Ω, đèn ≈ 90 Ω.',
+    conns: [...E1_TRIAC, ['e1.tT1', 'e1.lpa'], ['e1.r01a', 'ps.Y']],
+    pot: { 'e1.tT1': uz, 'e1.tG': (t, s) => uz(t, s) + pulseA(t, s) + pulseB(t, s), 'e1.lpb': (t, s) => uz(t, s) * KSH },
+    knobs: ['alpha'], scope: { v1: 10, v2: 10, td: 5 }, trig: AC, load: ['e1.lpa', 'e1.lpb'],
+  };
+}
+
+const EX = [
+  {
+    id: '7.1a', grp: 7, title: '7.1.1a Diode phân cực thuận', mods: ['e1'],
+    goal: 'Khảo sát diode công suất khi phân cực thuận với nguồn 12VDC và tải đèn Đ1 (Hình 7.3).',
+    steps: ['Tắt nguồn trước khi đấu dây.', 'Nối +12V (PS-012) → anode A của DIODE (PE-801).', 'Nối cathode K → một đầu đèn Đ1 (khối LOAD).', 'Nối đầu còn lại của Đ1 → GND (âm nguồn PS-012).', 'Bật nguồn, quan sát đèn. Đo bằng vôn kế (PE-803A) hai đầu đèn hoặc CH1 → K, GND → GND.'],
+    note: 'Phân cực thuận: diode dẫn, sụt áp ≈ 0,7 V → đèn sáng.',
+    conns: [['ps.p12', 'e1.dA'], ['e1.dK', 'e1.lpa'], ['e1.lpb', 'ps.gnd']], sym: [SYM_LAMP_E1],
+    pot: { 'e1.dK': () => 11.3 }, knobs: [], scope: { v1: 5, v2: 5, td: 5 }, trig: AC, load: ['e1.lpa', 'e1.lpb'],
+  },
+  {
+    id: '7.1b', grp: 7, title: '7.1.1b Diode phân cực ngược', mods: ['e1'],
+    goal: 'Đảo chiều diode: +12V vào cathode (Hình 7.4).',
+    steps: ['Tắt nguồn.', 'Nối +12V (PS-012) → cathode K của DIODE.', 'Nối anode A → một đầu đèn Đ1.', 'Nối đầu còn lại của Đ1 → GND.', 'Bật nguồn, quan sát đèn và đo điện áp trên đèn.'],
+    note: 'Phân cực ngược: diode khoá, không có dòng → đèn tắt, toàn bộ 12 V đặt lên diode.',
+    conns: [['ps.p12', 'e1.dK'], ['e1.dA', 'e1.lpa'], ['e1.lpb', 'ps.gnd']], sym: [SYM_LAMP_E1],
+    pot: { 'e1.dA': () => 0 }, knobs: [], scope: { v1: 5, v2: 5, td: 5 }, trig: AC, load: ['e1.lpa', 'e1.lpb'],
+  },
+  exSwitch('bjt'), exSwitch('mos'), exSwitch('igbt'),
+  {
+    id: '7.2.1', grp: 7, title: '7.2.1 Chỉnh lưu 1 pha nửa chu kỳ', mods: ['e1'],
+    goal: 'Chỉnh lưu một nửa chu kỳ bằng 1 diode, tải đèn Đ1 (Hình 7.10).',
+    steps: ['Tắt nguồn.', 'Nối L1 (PS-342) → anode A của DIODE.', 'Nối cathode K → một đầu đèn Đ1.', 'Nối đầu còn lại của Đ1 → N (PS-342).', 'Đặt dao động ký 10V/div, 5ms/div. CH1 → K diode, GND → N. Bật nguồn, vẽ dạng sóng.'],
+    note: 'Chỉ nửa chu kỳ dương qua tải: Ud = 0,45·U.',
+    conns: [['ps.L1', 'e1.dA'], ['e1.dK', 'e1.lpa'], ['e1.lpb', 'ps.N']], sym: [SYM_LAMP_E1],
+    pot: { 'e1.dK': t => Math.max(0, vP(t, 0) - 0.7) }, knobs: [], scope: { v1: 10, v2: 10, td: 5 }, trig: AC, load: ['e1.lpa', 'e1.lpb'],
+  },
+  {
+    id: '7.2.2', grp: 7, title: '7.2.2 Chỉnh lưu cầu 1 pha không điều khiển', mods: ['e1'],
+    goal: 'Chỉnh lưu hai nửa chu kỳ bằng cầu diode (BRIDGE) trên PE-801 (Hình 7.12).',
+    steps: ['Tắt nguồn.', 'Nối L1 (PS-342) → chốt “~” thứ nhất của cầu.', 'Nối N (PS-342) → chốt “~” còn lại.', 'Nối cực + của cầu → một đầu đèn Đ1; đầu còn lại → cực − của cầu.', 'CH1 → +, GND → −. Bật nguồn và so sánh với chỉnh lưu nửa chu kỳ.'],
+    note: 'Cả hai nửa chu kỳ đều qua tải cùng chiều: Ud = 0,9·U. Lưu ý: không được nối GND dao động ký vào N khi đang đo ở + / − (sẽ chập qua diode).',
+    conns: [['ps.L1', 'e1.brL'], ['ps.N', 'e1.brR'], ['e1.brP', 'e1.lpa'], ['e1.lpb', 'e1.brN']], sym: [SYM_LAMP_E1, [['e1.brL', 'e1.brR']]],
+    pot: { 'e1.brP': t => Math.max(vP(t, 0), 0), 'e1.brN': t => Math.min(vP(t, 0), 0) }, knobs: [], scope: { v1: 10, v2: 10, td: 5 }, trig: AC, load: ['e1.lpa', 'e1.lpb'],
+  },
+  {
+    id: '7.3.1', grp: 7, title: '7.3.1 Chỉnh lưu 3 pha hình tia (diode)', mods: ['e3'],
+    goal: 'Chỉnh lưu tia 3 pha dùng D1, D3, D5 của PE-803, tải đèn D1 (PE-803A) (Hình 7.13).',
+    steps: ['Tắt nguồn.', 'Nối L1 → A của D1; L2 → A của D3; L3 → A của D5 (khối công suất PE-803).', 'Nối chung K của D1, D3, D5 → cực +.', 'Nối cực + → đèn D1 (PE-803A) → N (PS-342).', 'CH1 → +, GND → N. Bật nguồn, vẽ dạng sóng (3 đỉnh / chu kỳ).'],
+    note: 'Mỗi diode dẫn 120° khi pha của nó cao nhất: Ud = 1,17·Upha.',
+    conns: [['ps.L1', 'e3.d1A'], ['ps.L2', 'e3.d3A'], ['ps.L3', 'e3.d5A'], ['e3.d1K', 'e3.d3K'], ['e3.d3K', 'e3.d5K'], ['e3.d5K', 'm.l1a'], ['m.l1b', 'ps.N']], sym: [SYM_L1],
+    pot: { 'e3.d1K': t => Math.max(vP(t, 0), vP(t, 1), vP(t, 2)) }, knobs: [], scope: { v1: 5, v2: 5, td: 5 }, trig: AC, load: ['m.l1a', 'm.l1b'],
+  },
+  {
+    id: '7.3.2', grp: 7, title: '7.3.2 Chỉnh lưu cầu 3 pha (diode)', mods: ['e3'],
+    goal: 'Cầu 3 pha 6 diode: nhóm trên D1, D3, D5 – nhóm dưới D4, D6, D2 (Hình 7.15).',
+    steps: ['Tắt nguồn.', 'L1 → A (D1) và K (D4); L2 → A (D3) và K (D6); L3 → A (D5) và K (D2).', 'Nối chung K của D1, D3, D5 → cực +Ud.', 'Nối chung A của D4, D6, D2 → cực −Ud.', 'Tải: +Ud → đèn D1 (PE-803A) → −Ud.', 'CH1 → +Ud, GND → −Ud. Bật nguồn, vẽ dạng sóng (6 đỉnh / chu kỳ).'],
+    note: 'Mỗi thời điểm có 1 diode nhóm trên và 1 diode nhóm dưới dẫn: Ud = 1,35·Udây ≈ 32 V.',
+    conns: [['ps.L1', 'e3.d1A'], ['ps.L1', 'e3.d4K'], ['ps.L2', 'e3.d3A'], ['ps.L2', 'e3.d6K'], ['ps.L3', 'e3.d5A'], ['ps.L3', 'e3.d2K'], ['e3.d1K', 'e3.d3K'], ['e3.d3K', 'e3.d5K'], ['e3.d4A', 'e3.d6A'], ['e3.d6A', 'e3.d2A'], ['e3.d1K', 'm.l1a'], ['m.l1b', 'e3.d4A']], sym: [SYM_L1],
+    pot: { 'e3.d1K': t => Math.max(vP(t, 0), vP(t, 1), vP(t, 2)), 'e3.d4A': t => Math.min(vP(t, 0), vP(t, 1), vP(t, 2)) }, knobs: [], scope: { v1: 10, v2: 10, td: 5 }, trig: AC, load: ['m.l1a', 'm.l1b'],
+  },
+  exSCRasync(false), exSCRasync(true),
+  {
+    id: '8.1.3', grp: 8, title: '8.1.3 Điều khiển đồng bộ SCR, tải trở', mods: ['sv'],
+    goal: 'Kích SCR đồng bộ với lưới bằng mạch TCA785, nguồn ~24VAC, tải đèn D1 (Hình 8.6).',
+    steps: ['Tắt nguồn. Cấp nguồn mạch kích: +12 (12VDC OUT) → +12 (INPUT); GND → GND (INPUT).', 'Nối G1 (TF-A) → G1 của SCR1; K1 (TF-A) → K1 của SCR1. (G1 – chốt đen, phía dưới, có diode – tương ứng OUT1/A trên Hình 8.6; K1 – chốt xanh, phía trên – tương ứng OUT1/B.)', 'Nối X (~24VAC) → một đầu đèn D1 (PE-803A); đầu kia → A1 của SCR1.', 'Nối K1 của SCR1 → Y.', 'Bật nguồn. CH1 → X, GND → Y; CH2 → A1. Xoay Vref (α), đặt α = 90° và vẽ giản đồ.'],
+    note: 'SCR chỉ dẫn ở nửa chu kỳ X dương, từ góc α đến π, rồi tự tắt khi dòng về 0.',
+    conns: [...SV_PWR, ['sv.G1', 'sv.s1G'], ['sv.K1', 'sv.s1K'], ['sv.X', 'm.l1a'], ['m.l1b', 'sv.s1A'], ['sv.s1K', 'sv.Y']], sym: [SYM_L1, SYM_TFA],
+    pot: { 'sv.s1A': (t, s) => { const th = TH(t); return (th >= s.a && th <= Math.PI) ? 0.9 : vX(t); }, 'sv.s1G': pulseA },
+    knobs: ['alpha'], scope: { v1: 10, v2: 10, td: 5 }, trig: AC, load: ['m.l1a', 'm.l1b'],
+  },
+  exTriacE1(), exSemi(false), exSemi(true), exFull(false), exFull(true),
+  {
+    id: '8.3', grp: 8, title: '8.3 Chỉnh lưu cầu 3 pha có điều khiển (6 SCR)', mods: ['e3'],
+    goal: 'Cầu 3 pha điều khiển hoàn toàn trên PE-803, đồng bộ kiểu tam giác, tải 2 đèn D1, D2 nối tiếp (LOAD R1, R2 trên Hình 8.12).', lampRated: 48,
+    steps: [
+      'Tắt nguồn. Cấp nguồn: +12V (PS-012) → “+” 12VDC INPUT; GND → “−”.',
+      'Đồng bộ kiểu tam giác: PHASE-1: L1 → L1, L3 → N/L3; PHASE-2: L2 → L2, L1 → N/L1; PHASE-3: L3 → L3, L2 → N/L2.',
+      'Mạch lực: L1 → A1 & K4; L2 → A3 & K6; L3 → A5 & K2.',
+      'Nối chung K1, K3, K5 → +Ud; nối chung A4, A6, A2 → −Ud.',
+      'Xung kích: Gn/Kn (khối PHASE) → Gn/Kn của SCRn, với n = 1…6 (G1, G4 ở PHASE-1; G3, G6 ở PHASE-2; G5, G2 ở PHASE-3). Ở PHASE-1 dùng cặp G1/K1 hoặc G1-1/K1-1 (G4/K4 hoặc G4-1/K4-1) đều được, nhưng không trộn hai cặp.',
+      'Tải (đúng Hình 8.12): +Ud → đèn D1 → đèn D2 → −Ud. Bật nguồn, CH1 → +Ud, GND → −Ud. Xoay Vref Adj, vẽ Ud tại α = 90° (tức π/2).',
+    ],
+    note: 'Thứ tự kích SCR1→SCR2→…→SCR6 cách nhau 60°. Tải trở: Ud = 1,35·Udây·cosα (α ≤ 60°), gián đoạn khi α > 60°.',
+    conns: [['ps.p12', 'e3.in_p'], ['ps.gnd', 'e3.in_n'],
+      ['ps.L1', 'e3.p1L'], ['ps.L3', 'e3.p1N'], ['ps.L2', 'e3.p2L'], ['ps.L1', 'e3.p2N'], ['ps.L3', 'e3.p3L'], ['ps.L2', 'e3.p3N'],
+      ['ps.L1', 'e3.s1A'], ['ps.L1', 'e3.s4K'], ['ps.L2', 'e3.s3A'], ['ps.L2', 'e3.s6K'], ['ps.L3', 'e3.s5A'], ['ps.L3', 'e3.s2K'],
+      ['e3.s1K', 'e3.s3K'], ['e3.s3K', 'e3.s5K'], ['e3.s4A', 'e3.s6A'], ['e3.s6A', 'e3.s2A'],
+      ...[1, 2, 3, 4, 5, 6].flatMap(k => [['e3.g' + k, 'e3.s' + k + 'G'], ['e3.k' + k, 'e3.s' + k + 'K']]),
+      ['e3.s1K', 'm.l1a'], ['m.l1b', 'm.l2a'], ['m.l2b', 'e3.s4A']],
+    // PHASE-1 có 2 cuộn thứ cấp cho mỗi biến áp xung: G1/K1 ≡ G1-1/K1-1, G4/K4 ≡ G4-1/K4-1 (dùng trọn cặp)
+    sym: [SYM_L1, [['m.l2a', 'm.l2b']], [['e3.g1', 'e3.g11'], ['e3.k1', 'e3.k11']], [['e3.g4', 'e3.g41'], ['e3.k4', 'e3.k41']]],
+    pot: {
+      'e3.s1K': (t, s) => bridge3(t, s)[0], 'e3.s4A': (t, s) => bridge3(t, s)[1], 'm.l1b': (t, s) => (bridge3(t, s)[0] + bridge3(t, s)[1]) / 2,
+      'e3.s1G': (t, s) => bridge3(t, s)[0] + pulse3(1, t, s), 'e3.s3G': (t, s) => bridge3(t, s)[0] + pulse3(3, t, s), 'e3.s5G': (t, s) => bridge3(t, s)[0] + pulse3(5, t, s),
+      'e3.s4G': (t, s) => vP(t, 0) + pulse3(4, t, s), 'e3.s6G': (t, s) => vP(t, 1) + pulse3(6, t, s), 'e3.s2G': (t, s) => vP(t, 2) + pulse3(2, t, s),
+    },
+    knobs: ['alpha'], scope: { v1: 10, v2: 10, td: 5 }, trig: AC, load: ['m.l1a', 'm.l2b'],
+  },
+  exDC('buck'), exDC('boost'), exDC('bb'), ex4Q(),
+  exACR(), exTriac(true),
+  {
+    id: '9.3a', grp: 9, title: '9.3.3 Nghịch lưu ngõ ra sóng vuông', mods: ['inv'], lampRated: 220,
+    goal: 'Nghịch lưu đẩy kéo dùng CD4047 + 2 MOSFET + biến áp có điểm giữa (PE-805).',
+    steps: ['Tắt nguồn.', 'Cấp nguồn IC: +12V (PS-012) → VCC; GND → GND (cạnh CD4047).', 'Cấp nguồn mạch lực: +12V → chốt vàng “+” (điểm giữa biến áp); GND → chốt đen “−” 12VDC INPUT.', 'Nối OUT1 → G1 và OUT2 → G2.', 'Nối 2 chốt 220V OUTPUT → hai đầu đèn D1 (PE-803A).', 'Bật nguồn. CH1 → OUT1, CH2 → OUT2 (GND → GND). Chỉnh Freq Adj để f = 50 Hz.'],
+    note: 'Q1, Q2 dẫn luân phiên → từ thông đảo chiều trong biến áp → ngõ ra sóng vuông ±220 V. Đo điện áp cao: phải tắt nguồn rồi mới kẹp que đo.',
+    conns: [['ps.p12', 'inv.vcc'], ['ps.gnd', 'inv.icgnd'], ['ps.p12', 'inv.sqCT'], ['ps.gnd', 'inv.sqGnd'], ['inv.out1', 'inv.g1'], ['inv.out2', 'inv.g2'], ['inv.sqOa', 'm.l1a'], ['m.l1b', 'inv.sqOb']], sym: [SYM_L1],
+    pot: { 'inv.out1': (t, s) => sq(t, s) ? 12 : 0, 'inv.out2': (t, s) => sq(t, s) ? 0 : 12, 'inv.sqOa': (t, s) => sq(t, s) ? 220 : -220, 'inv.sqOb': () => 0 },
+    knobs: ['finv'], scope: { v1: 5, v2: 5, td: 5 }, trig: s => 1 / s.finv, load: ['m.l1a', 'm.l1b'],
+  },
+  {
+    id: '9.3b', grp: 9, title: '9.3.3 Nghịch lưu ngõ ra sóng sin', mods: ['inv'], lampRated: 220,
+    goal: 'Nghịch lưu cầu H điều chế SPWM (12VDC → 400VDC → 220VAC) trên PE-805.',
+    steps: ['Tắt nguồn.', 'Nối +12V (PS-012) → “+” 12VDC INPUT (phần sóng sin); GND → “−”.', 'Nối hai chốt 220VAC OUTPUT → hai đầu đèn D1 (PE-803A).', 'Bật nguồn. Đo lần lượt: 2H0/VS2; 1L0/GND; và VS1–VS2 (CH1 → VS1, CH2 → VS2, GND → GND).', 'Đo điện áp ra 220VAC: tắt nguồn, kẹp que đo vào hai đầu đèn rồi bật lại.'],
+    note: 'Mỗi nhánh cầu đóng cắt theo so sánh sin – tam giác; sau bộ lọc LC điện áp ra là hình sin 220 V / 50 Hz. (Mô phỏng hạ tần số sóng mang xuống 1,5 kHz để dễ quan sát.)',
+    conns: [['ps.p12', 'inv.sinP'], ['ps.gnd', 'inv.sinN'], ['inv.sinOa', 'm.l1a'], ['m.l1b', 'inv.sinOb']], sym: [SYM_L1],
+    pot: {
+      'inv.vs1': t => on1(t) ? 400 : 0, 'inv.vs2': t => on2(t) ? 400 : 0, 'inv.tgnd': () => 0,
+      'inv.h1': t => (on1(t) ? 412 : 0), 'inv.l1': t => on1(t) ? 0 : 12, 'inv.h2': t => (on2(t) ? 412 : 0), 'inv.l2': t => on2(t) ? 0 : 12,
+      'inv.sinOa': t => 200 + 155.6 * Math.sin(W50 * t), 'inv.sinOb': t => 200 - 155.6 * Math.sin(W50 * t),
+    },
+    knobs: [], scope: { v1: 200, v2: 200, td: 5 }, trig: AC, load: ['m.l1a', 'm.l1b'],
+  },
+  {
+    id: 'free', grp: 0, title: 'Thực hành tự do (tất cả module)', mods: ['e1', 'e3', 'sv', 'inv'], conns: null,
+    goal: 'Tự cắm mạch tuỳ ý. Mô phỏng chỉ kiểm tra ngắn mạch nguồn và hiển thị điện áp các nguồn.',
+    steps: ['Có thể đo trực tiếp các nguồn: +12V/GND, L1/L2/L3/N (PS-342), X/Y (~24VAC bo đồng bộ).', 'Nối đèn trực tiếp vào nguồn để quan sát.'],
+    note: 'Không có đáp án ở chế độ tự do.', knobs: ['alpha'], scope: { v1: 10, v2: 10, td: 5 }, trig: AC,
+  },
+];
+// các SCR trên bo đồng bộ giống nhau: cho phép dùng SCR1–SCR4 bất kỳ thay cho SCR trong đáp án
+function svScrPerm(used) {
+  const res = [], rec = ch => {
+    if (ch.length === used.length) return res.push(used.flatMap((u, k) => ['A', 'K', 'G'].map(p => ['sv.s' + u + p, 'sv.s' + ch[k] + p])));
+    for (let c = 1; c <= 4; c++) if (!ch.includes(c)) rec([...ch, c]);
+  };
+  rec([]); return { opts: res };
+}
+EX.forEach(e => {
+  if (!e.conns || !e.mods.includes('sv')) return;
+  const used = [1, 2, 3, 4].filter(k => e.conns.some(c => c.some(j => j.startsWith('sv.s' + k))));
+  if (used.length) e.sym = [...(e.sym || []), svScrPerm(used)];
+  if (e.conns.some(c => c.includes('sv.d1A')) && e.conns.some(c => c.includes('sv.d2A'))) e.sym = [...(e.sym || []), [['sv.d1A', 'sv.d2A'], ['sv.d1K', 'sv.d2K']]];
+  if (e.conns.some(c => c.some(j => /^sv.[GK][12]$/.test(j)))) {
+    [e.conns, ...(e.alt || [])].forEach(c => c.push(['sv.acL', 'sv.syL'], ['sv.acN', 'sv.syN']));
+    e.steps.splice(1, 0, 'Cấp đồng bộ cho mạch kích (TCA785): L (220VAC cạnh POWER ON) → L (220VAC góc trên trái); N → N.');
+  }
+  if (used.length) e.steps.splice(e.steps.length - 1, 0, 'Các SCR trên bo giống nhau: có thể dùng SCR1–SCR4 bất kỳ (ví dụ SCR3/SCR4 thay SCR1/SCR2); cặp xung G1-1/K1-1 dùng thay G1/K1 được.');
+  if (e.conns.some(c => c.includes('sv.X'))) {
+    e.sym = [...(e.sym || []), [['sv.X', 'ps.X'], ['sv.Y', 'ps.Y']]];
+    e.steps.splice(1, 0, 'Nguồn ~24VAC X–Y: dùng cặp X/Y trên bo đồng bộ hoặc cặp X/Y trên Bộ nguồn đều được – nhưng X và Y phải lấy từ cùng một nguồn.');
+  }
+  e.steps.splice(e.steps.length - 1, 0, 'Bật công tắc POWER ON trên bo (bấm vào công tắc). Bo chỉ có điện khi bật cả công tắc này và NGUỒN chung.');
+});
+const GROUPS = { 7: 'Bài 7 · Linh kiện & chỉnh lưu không điều khiển', 8: 'Bài 8 · Kích Thyristor/Triac & chỉnh lưu có điều khiển', 9: 'Bài 9 · Bộ biến đổi nguồn', 0: 'Khác' };
+
+/* =========================================================================
+   4. THREE.JS – CẢNH
+   ========================================================================= */
+const canvas = document.getElementById('c3d');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#e3e9f1');
+const camera = new THREE.PerspectiveCamera(38, 1, 0.5, 3000);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.46; controls.minDistance = 8; controls.maxDistance = 500;
+// nhấn giữ con lăn kéo để dời khung nhìn (trượt song song mặt bàn); con lăn cuộn vẫn để zoom
+controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.PAN };
+controls.screenSpacePanning = false; controls.panSpeed = 1.2;
+canvas.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); }); // tắt cuộn tự động của trình duyệt
+canvas.addEventListener('pointerdown', e => { if (e.button === 1) canvas.style.cursor = 'grabbing'; });
+addEventListener('pointerup', e => { if (e.button === 1) canvas.style.cursor = ''; });
+scene.add(new THREE.HemisphereLight('#ffffff', '#4a3a2a', 1.35));
+const sun = new THREE.DirectionalLight('#ffffff', 1.7); sun.position.set(-40, 140, 80); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -130, right: 130, top: 130, bottom: -130, near: 10, far: 400 });
+scene.add(sun); scene.add(sun.target);
+const ANISO = renderer.capabilities.getMaxAnisotropy();
+// ảnh mặt module (data URI trong textures.js → không bị chặn khi mở bằng file://)
+const IMG = {};
+await Promise.all(Object.entries(window.TEX || {}).map(([k, src]) => new Promise(r => { const im = new Image(); im.onload = () => { IMG[k] = im; r(); }; im.onerror = r; im.src = src; })));
+
+let world = null; // group chứa bàn + module của bài hiện tại
+const jacks = new Map();   // id -> {id, def, mod, pos, mesh, meas, name}
+let jackMeshes = [], lamps = [], knobMeshes = [], meterNeedles = [], leds = [], scopeTex = null, swMeshes = [], swObj = null;
+
+const matCache = {};
+const mat = (hex, o = {}) => { const k = hex + JSON.stringify(o); return matCache[k] || (matCache[k] = new THREE.MeshStandardMaterial({ color: hex, roughness: .45, metalness: .05, ...o })); };
+const GEO = {
+  collar: new THREE.CylinderGeometry(0.8, 0.8, 0.16, 28),
+  body: new THREE.CylinderGeometry(0.6, 0.64, JH, 28),
+  hole: new THREE.CylinderGeometry(0.27, 0.27, 0.02, 16),
+  plug: new THREE.CylinderGeometry(0.5, 0.42, 1.1, 20),
+  ring: new THREE.TorusGeometry(0.98, 0.1, 8, 36),
+  hit: new THREE.CylinderGeometry(1.05, 1.05, 2.6, 12),
+};
+// vùng bấm vô hình lớn hơn chốt thật để dễ chọn
+const HIT_MAT = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
+let modBoxes = [];
+
+function makePainter(ctx, ink) {
+  const p = v => v * S;
+  const P = {
+    line(pts, { w = 0.07, col = ink, dash = null } = {}) {
+      ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = p(w); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      if (dash) ctx.setLineDash(dash.map(p)); ctx.beginPath();
+      pts.forEach(([x, y], i) => i ? ctx.lineTo(p(x), p(y)) : ctx.moveTo(p(x), p(y))); ctx.stroke(); ctx.restore();
+    },
+    rrect(x, y, w, h, r, { fill = null, stroke = ink, lw = 0.07 } = {}) {
+      ctx.save(); ctx.beginPath(); ctx.roundRect(p(x), p(y), p(w), p(h), p(r));
+      if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = p(lw); ctx.stroke(); } ctx.restore();
+    },
+    circle(x, y, r, { fill = null, stroke = ink, lw = 0.07 } = {}) {
+      ctx.save(); ctx.beginPath(); ctx.arc(p(x), p(y), p(r), 0, TWO_PI);
+      if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = p(lw); ctx.stroke(); } ctx.restore();
+    },
+    text(s, x, y, { size = 0.55, col = ink, align = 'center', bold = true } = {}) {
+      ctx.save(); ctx.fillStyle = col; ctx.font = `${bold ? 700 : 500} ${p(size)}px Arial, Helvetica, sans-serif`;
+      ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.fillText(s, p(x), p(y)); ctx.restore();
+    },
+    title(s, x, y) { P.text(s, x, y, { size: 0.82 }); },
+    block(x, y, w, h, t) { P.rrect(x, y, w, h, 0.55, { lw: 0.08 }); if (t) P.text(t, x + 0.5, y + 0.75, { size: 0.5, align: 'left' }); },
+    ic(x, y, w, h, name) { P.rrect(x, y, w, h, 0.12, { lw: 0.08 }); P.text(name, x + w / 2, y + h / 2, { size: 0.55 }); },
+    xfmr(x, y) {
+      for (let i = 0; i < 4; i++) {
+        ctx.save(); ctx.strokeStyle = ink; ctx.lineWidth = p(.07); ctx.beginPath(); ctx.arc(p(x - .55), p(y - .9 + i * .6), p(.3), -Math.PI / 2, Math.PI / 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(p(x + .55), p(y - .9 + i * .6), p(.3), Math.PI / 2, Math.PI * 1.5); ctx.stroke(); ctx.restore();
+      }
+      P.line([[x - .08, y - 1.3], [x - .08, y + 1.3]]); P.line([[x + .08, y - 1.3], [x + .08, y + 1.3]]);
+    },
+    coil(x, y0, y1, side) {
+      const n = Math.max(3, Math.round((y1 - y0) / .7)), st = (y1 - y0) / n;
+      for (let i = 0; i < n; i++) { ctx.save(); ctx.strokeStyle = ink; ctx.lineWidth = p(.07); ctx.beginPath(); const a0 = side === 'R' ? -Math.PI / 2 : Math.PI / 2; ctx.arc(p(x), p(y0 + st * (i + .5)), p(st / 2), a0, a0 + Math.PI, side !== 'R'); ctx.stroke(); ctx.restore(); }
+    },
+    dial(cx, cy, r, max, unit) {
+      P.rrect(cx - r - .7, cy - r - .9, 2 * r + 1.4, r + 1.4, .3, { fill: '#fbfbf6', stroke: '#888' });
+      ctx.save(); ctx.strokeStyle = '#222'; ctx.lineWidth = p(.06); ctx.beginPath();
+      const a0 = -Math.PI / 2 - 0.96, a1 = -Math.PI / 2 + 0.96; ctx.arc(p(cx), p(cy), p(r - .4), a0, a1); ctx.stroke(); ctx.restore();
+      for (let i = 0; i <= 6; i++) {
+        const a = a0 + (a1 - a0) * i / 6, c = Math.cos(a), s = Math.sin(a);
+        P.line([[cx + c * (r - .4), cy + s * (r - .4)], [cx + c * (r - .9), cy + s * (r - .9)]], { col: '#222', w: .06 });
+        P.text(String(+(max * i / 6).toFixed(1)), cx + c * (r - 1.45), cy + s * (r - 1.45), { size: .36, col: '#222' });
+      }
+      P.text(unit, cx, cy - 1.6, { size: .7, col: '#b22' });
+    },
+    two(type, a, b, opt = {}) {
+      const [ax, ay] = a, [bx, by] = b, dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
+      const mx = (ax + bx) / 2, my = (ay + by) / 2;
+      const half = { lamp: .65, res: 1, ind: 1.2, triac: .55, scr: .55, diode: .55 }[type];
+      P.line([[ax + ux * .75, ay + uy * .75], [mx - ux * half, my - uy * half]]);
+      P.line([[mx + ux * half, my + uy * half], [bx - ux * .75, by - uy * .75]]);
+      ctx.save(); ctx.translate(p(mx), p(my)); ctx.rotate(Math.atan2(uy, ux)); ctx.strokeStyle = ink; ctx.fillStyle = ink; ctx.lineWidth = p(.07);
+      const tri = (pts) => { ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(p(x), p(y)) : ctx.moveTo(p(x), p(y))); ctx.closePath(); ctx.fill(); };
+      const seg = (x0, y0, x1, y1) => { ctx.beginPath(); ctx.moveTo(p(x0), p(y0)); ctx.lineTo(p(x1), p(y1)); ctx.stroke(); };
+      if (type === 'diode' || type === 'scr') { tri([[-.55, -.55], [-.55, .55], [.55, 0]]); seg(.55, -.6, .55, .6); }
+      if (type === 'triac') { tri([[-.55, -.9], [-.55, 0], [.55, -.45]]); tri([[.55, 0], [.55, .9], [-.55, .45]]); seg(.55, -.95, .55, .95); seg(-.55, -.95, -.55, .95); }
+      if (type === 'res') { ctx.strokeRect(p(-1), p(-.38), p(2), p(.76)); }
+      if (type === 'ind') { for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(p(-.9 + i * .6), 0, p(.3), Math.PI, 0); ctx.stroke(); } }
+      if (type === 'lamp') { ctx.beginPath(); ctx.arc(0, 0, p(.65), 0, TWO_PI); ctx.stroke(); seg(-.46, -.46, .46, .46); seg(-.46, .46, .46, -.46); }
+      ctx.restore();
+      if (opt.gate) {
+        const [gx, gy] = opt.gate, side = ((gx - mx) * nx + (gy - my) * ny) > 0 ? 1 : -1;
+        const sx = mx + ux * .5 + nx * side * .55, sy = my + uy * .5 + ny * side * .55;
+        const ex = mx + ux * .5 + nx * side * 1.2, ey = my + uy * .5 + ny * side * 1.2;
+        const gl = Math.hypot(gx - ex, gy - ey), k = Math.max(0, (gl - .75) / gl);
+        P.line([[sx, sy], [ex, ey], [ex + (gx - ex) * k, ey + (gy - ey) * k]]);
+      }
+    },
+    fet(top, bot, gate, kind) {
+      const x = top[0], yc = (top[1] + bot[1]) / 2, xb = x + .6, xg = x + 1.0;
+      P.line([[x, top[1] + .75], [x, yc - .5], [xb, yc - .5]]); P.line([[x, bot[1] - .75], [x, yc + .5], [xb, yc + .5]]);
+      P.line([[xb, yc - .8], [xb, yc + .8]], { w: .12 });
+      if (kind !== 'bjt') P.line([[xg, yc - .65], [xg, yc + .65]]);
+      P.line([[kind === 'bjt' ? xb : xg, yc], [gate[0] - .75, gate[1]]]);
+      if (kind !== 'mos') { ctx.save(); ctx.fillStyle = ink; ctx.beginPath(); ctx.moveTo(p(x + .1), p(yc + .5)); ctx.lineTo(p(x + .5), p(yc + .28)); ctx.lineTo(p(x + .5), p(yc + .72)); ctx.closePath(); ctx.fill(); ctx.restore(); }
+      else { ctx.save(); ctx.fillStyle = ink; ctx.beginPath(); ctx.moveTo(p(xb - .05), p(yc + .5)); ctx.lineTo(p(x + .25), p(yc + .3)); ctx.lineTo(p(x + .25), p(yc + .7)); ctx.closePath(); ctx.fill(); ctx.restore(); }
+    },
+  };
+  return P;
+}
+
+function buildModule(def, ox, oz) {
+  const g = new THREE.Group(); g.position.set(ox, 0, oz);
+  const cv = document.createElement('canvas'); cv.width = Math.round(def.w * S); cv.height = Math.round(def.h * S);
+  const ctx = cv.getContext('2d'); ctx.fillStyle = def.bg; ctx.fillRect(0, 0, cv.width, cv.height);
+  const P = makePainter(ctx, def.ink), photo = IMG[def.photo];
+  if (photo) ctx.drawImage(photo, 0, 0, cv.width, cv.height);
+  else { P.rrect(.35, .35, def.w - .7, def.h - .7, .7, { lw: .1 }); def.paint?.(P); }
+  for (const k of photo ? [] : def.knobs || []) {
+    for (let i = 0; i <= 10; i++) { const a = (-135 + 27 * i - 90) * Math.PI / 180; P.line([[k.x + Math.cos(a) * 1.45, k.y + Math.sin(a) * 1.45], [k.x + Math.cos(a) * 1.8, k.y + Math.sin(a) * 1.8]], { w: .06 }); }
+    if (k.label) P.text(k.label, k.x, k.y + 2.4, { size: .42 });
+  }
+  for (const j of photo ? [] : def.jacks) {
+    const r = j.small ? .62 : .9;
+    P.circle(j.x, j.y, r, { fill: 'rgba(0,0,0,.22)', stroke: null });
+    if (j.label) {
+      const o = j.small ? .9 : 1.3, pos = { b: [j.x, j.y + o, 'center'], t: [j.x, j.y - o, 'center'], l: [j.x - o + .2, j.y, 'right'], r: [j.x + o - .2, j.y, 'left'] }[j.lp];
+      P.text(j.label, pos[0], pos[1], { size: .46, align: pos[2] });
+    }
+  }
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = ANISO;
+  const side = new THREE.MeshStandardMaterial({ color: def.edge, roughness: .7 });
+  const top = new THREE.MeshStandardMaterial({ map: tex, roughness: .8 });
+  const box = new THREE.Mesh(new THREE.BoxGeometry(def.w, PT, def.h), [side, side, top, side, side, side]);
+  box.position.set(def.w / 2, PT / 2, def.h / 2); box.castShadow = box.receiveShadow = true; g.add(box);
+  box.userData.mod = def.id; modBoxes.push(box);
+
+  for (const j of def.jacks) {
+    const sc = (j.small ? (photo ? .6 : .7) : 1) * (def.js || 1), jg = new THREE.Group(); jg.position.set(j.x, PT, j.y); jg.scale.setScalar(sc);
+    const collar = new THREE.Mesh(GEO.collar, mat('#b9bec6', { metalness: .6, roughness: .35 })); collar.position.y = .08; jg.add(collar);
+    const body = new THREE.Mesh(GEO.body, mat(COLORS[j.c])); body.position.y = .16 + JH / 2; body.castShadow = true; jg.add(body);
+    const hole = new THREE.Mesh(GEO.hole, mat('#0a0a0a')); hole.position.y = .16 + JH + .01; jg.add(hole);
+    g.add(jg);
+    const id = def.id + '.' + j.id;
+    body.userData.jack = id;
+    const topY = PT + (.16 + JH) * sc;
+    jacks.set(id, { id, j, def, pos: new THREE.Vector3(ox + j.x, topY, oz + j.y), mesh: body, meas: j.meas, name: `${def.short} · ${j.grp ? j.grp + ' ' : ''}${j.label || ''}`.trim() });
+    const hit = new THREE.Mesh(GEO.hit, HIT_MAT); hit.position.y = 1.2; hit.userData.jack = id; jg.add(hit);
+    jackMeshes.push(hit);
+  }
+  for (const L of def.lamps || []) {
+    const lg = new THREE.Group(); lg.position.set(L.x, PT, L.y);
+    const sock = new THREE.Mesh(new THREE.CylinderGeometry(.75, .85, 1.1, 20), mat('#3a3a3a', { metalness: .4 })); sock.position.y = .55; lg.add(sock);
+    const glassM = new THREE.MeshStandardMaterial({ color: '#bdb8ac', emissive: '#ffb84a', emissiveIntensity: 0, roughness: .25, transparent: true, opacity: .55 });
+    const glass = new THREE.Mesh(new THREE.SphereGeometry(1.05, 24, 18), glassM); glass.position.y = 1.9; lg.add(glass);
+    const light = new THREE.PointLight('#ffb050', 0, 30, 2); light.position.y = 2; lg.add(light);
+    g.add(lg);
+    lamps.push({ glassM, light, bb: 0, A: def.id + '.' + L.a, B: def.id + '.' + L.b });
+  }
+  for (const k of def.knobs || []) {
+    const kg = new THREE.Group(); kg.position.set(k.x, PT, k.y);
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.15, 1.1, 28), mat('#222428', { roughness: .6 })); c.position.y = .55; c.castShadow = true; kg.add(c);
+    const ptr = new THREE.Mesh(new THREE.BoxGeometry(.18, .1, .9), mat('#ff8a1f')); ptr.position.set(0, 1.12, -.5); kg.add(ptr);
+    g.add(kg); knobMeshes.push({ g: kg, p: k.p });
+  }
+  for (const m of def.meters || []) {
+    const ng = new THREE.Group(); ng.position.set(m.x, PT + .06, m.y);
+    const geo = new THREE.BoxGeometry(.09, .05, m.r - .5); geo.translate(0, 0, -(m.r - .5) / 2);
+    ng.add(new THREE.Mesh(geo, mat('#c01818'))); g.add(ng);
+    meterNeedles.push({ g: ng, kind: m.kind, max: m.max, a0: m.a0 ?? -0.96, a1: m.a1 ?? 0.96, ang: m.a0 ?? -0.96 });
+  }
+  for (const l of def.leds || []) {
+    const lm = new THREE.MeshStandardMaterial({ color: '#2a3a2a', emissive: '#30ff70', emissiveIntensity: 0 });
+    const led = new THREE.Mesh(new THREE.SphereGeometry(.4, 14, 10), lm); led.position.set(l.x, PT + .2, l.y); g.add(led); leds.push({ m: lm, sw: l.sw });
+  }
+  if (def.sw) {
+    const sg = new THREE.Group(); sg.position.set(def.sw.x, PT, def.sw.y);
+    const base = new THREE.Mesh(new THREE.BoxGeometry(4.2, .5, 2.8), mat('#151515', { roughness: .6 })); base.position.y = .25; sg.add(base);
+    const rocker = new THREE.Mesh(new THREE.BoxGeometry(3.4, .45, 2.1), mat('#2b2b2e', { roughness: .5 })); rocker.position.y = .7; sg.add(rocker);
+    const mark = new THREE.Mesh(new THREE.BoxGeometry(.25, .05, 1.2), new THREE.MeshStandardMaterial({ color: '#ddd', emissive: '#30ff70', emissiveIntensity: 0 })); mark.position.set(1.1, .95, 0); rocker.add(mark);
+    const hit = new THREE.Mesh(new THREE.BoxGeometry(4.4, 2, 3), HIT_MAT); hit.position.y = .8; hit.userData.sw = def.id; sg.add(hit);
+    g.add(sg); swMeshes.push(hit); swObj = { rocker, mark };
+  }
+  if (def.screen) {
+    const sc = def.screen;
+    scopeTex = new THREE.CanvasTexture(document.getElementById('scope')); scopeTex.colorSpace = THREE.SRGBColorSpace;
+    const pl = new THREE.Mesh(new THREE.PlaneGeometry(sc.w, sc.h), new THREE.MeshBasicMaterial({ map: scopeTex }));
+    pl.rotation.x = -Math.PI / 2; pl.position.set(sc.x + sc.w / 2, PT + .02, sc.y + sc.h / 2); g.add(pl);
+  }
+  world.add(g);
+}
+
+let layoutCenter = new THREE.Vector3(), layoutExtent = 100;
+function buildWorld(ex) {
+  if (world) { scene.remove(world); world.traverse(o => { if (o.geometry && !Object.values(GEO).includes(o.geometry)) o.geometry.dispose(); }); }
+  world = new THREE.Group(); scene.add(world);
+  jacks.clear(); jackMeshes = []; lamps = []; knobMeshes = []; meterNeedles = []; leds = []; scopeTex = null; modBoxes = []; swMeshes = []; swObj = null;
+  const ids = [...new Set([...ex.mods, 'ps', 'm', 'osc'])];
+  const maxW = ids.length > 5 ? 112 : 92, gap = 3;
+  let x = 0, z = 0, rowH = 0, maxX = 0; const place = [];
+  for (const id of ids) {
+    const d = MODS[id];
+    if (x > 0 && x + d.w > maxW) { x = 0; z += rowH + gap; rowH = 0; }
+    place.push([d, x, z]); x += d.w + gap; rowH = Math.max(rowH, d.h); maxX = Math.max(maxX, x - gap);
+  }
+  const totalZ = z + rowH;
+  const ox = -maxX / 2, oz = -totalZ / 2;
+  for (const [d, px, pz] of place) buildModule(d, ox + px, oz + pz);
+  const table = new THREE.Mesh(new THREE.BoxGeometry(maxX + 40, 4, totalZ + 40), new THREE.MeshStandardMaterial({ color: '#7a5636', roughness: .85 }));
+  table.position.y = -2; table.receiveShadow = true; world.add(table);
+  layoutCenter.set(0, 0, 0); layoutExtent = Math.max(maxX, totalZ * 1.4);
+  state.modPlace = place.map(([d, px, pz]) => ({ id: d.id, short: d.short, x: ox + px, z: oz + pz, w: d.w, h: d.h }));
+  resetCam(true); buildViews();
+}
+
+// ---- camera: bay mượt tới vị trí ----
+let camAnim = null;
+function flyTo(pos, target, instant) {
+  if (instant) { camera.position.copy(pos); controls.target.copy(target); controls.update(); camAnim = null; return; }
+  camAnim = { p0: camera.position.clone(), t0: controls.target.clone(), p1: pos, t1: target, s: performance.now() };
+}
+function resetCam(instant) {
+  const D = layoutExtent * 1.12;
+  flyTo(new THREE.Vector3(layoutCenter.x, D * 0.95, layoutCenter.z + D * 0.62), layoutCenter.clone().add(new THREE.Vector3(0, 0, 4)), instant === true);
+}
+function topView() { const D = layoutExtent * 1.3; flyTo(new THREE.Vector3(layoutCenter.x, D, layoutCenter.z + 0.5), layoutCenter.clone()); }
+function focusModule(id) {
+  const m = state.modPlace.find(x => x.id === id); if (!m) return;
+  const c = new THREE.Vector3(m.x + m.w / 2, 0, m.z + m.h / 2), D = Math.max(m.w, m.h * 1.5) * 1.1;
+  flyTo(new THREE.Vector3(c.x, D * 0.95, c.z + D * 0.42), c);
+}
+function focusPoint(p, D = 30) { flyTo(new THREE.Vector3(p.x, p.y + D * 0.9, p.z + D * 0.45), p.clone()); }
+function buildViews() {
+  const v = document.getElementById('views'); v.innerHTML = '';
+  const add = (txt, fn, title) => { const b = document.createElement('button'); b.textContent = txt; b.title = title || ''; b.onclick = fn; v.append(b); };
+  add('Toàn cảnh', () => resetCam(), 'Phím R'); add('Nhìn từ trên', topView, 'Phím T');
+  state.modPlace.forEach(m => add(m.short, () => focusModule(m.id), 'Phóng to module (hoặc nhấp đúp lên module)'));
+}
+
+/* =========================================================================
+   5. DÂY NỐI
+   ========================================================================= */
+const state = { ex: null, wires: [], power: false, color: 'auto', mode: 'practice', pending: null, selWire: null, sim: null, checks: 0, failed: 0, safety: 0, hints: 0, t0: performance.now(), doneAt: null, flash: new Set(), flashUntil: 0, undo: [], redo: [], modPlace: [] };
+try { state.mode = localStorage.getItem('dtcs3d.mode') === 'exam' ? 'exam' : 'practice'; } catch (e) { state.mode = 'practice'; }
+let wireSeq = 1;
+let wireObjs = [];
+
+function stackIndex(jid, w) { const list = state.wires.filter(x => x.a === jid || x.b === jid); return list.indexOf(w); }
+function rebuildWires() {
+  for (const o of wireObjs) { world.remove(o); o.traverse(m => { if (m.geometry && !Object.values(GEO).includes(m.geometry)) m.geometry.dispose(); }); }
+  wireObjs = [];
+  const an = state.sim?.an, wrongSet = state.mode === 'guide' && an ? new Set(an.wrongWires.map(w => w.id)) : null;
+  for (const w of state.wires) {
+    const g = new THREE.Group(); g.userData.wire = w;
+    const hex = WIRE_COLORS.find(c => c[0] === w.color)[1];
+    const sel = state.selWire === w, fl = state.flash.has(w.id) || !!wrongSet?.has(w.id);
+    const m = new THREE.MeshStandardMaterial({ color: hex, roughness: .5, emissive: fl ? '#ff1010' : sel ? '#7fd8ff' : '#000', emissiveIntensity: fl || sel ? .7 : 0 });
+    const ends = [];
+    for (const jid of [w.a, w.b]) {
+      const J = jacks.get(jid), k = stackIndex(jid, w);
+      const base = J.pos.clone(); base.y += k * 1.0;
+      const pl = new THREE.Mesh(GEO.plug, m); pl.position.copy(base).add(new THREE.Vector3(0, .55, 0)); pl.castShadow = true; pl.userData.wire = w; g.add(pl);
+      ends.push(base.clone().add(new THREE.Vector3(0, 1.1, 0)));
+    }
+    const [p0, p1] = ends, d = p0.distanceTo(p1), lift = 2.2 + d * 0.22;
+    const dir = new THREE.Vector3().subVectors(p1, p0); const side = new THREE.Vector3(-dir.z, 0, dir.x).normalize().multiplyScalar(((w.id * 37) % 7 - 3) * 0.25);
+    const mid = p0.clone().lerp(p1, .5).add(new THREE.Vector3(0, lift, 0)).add(side);
+    const curve = new THREE.CatmullRomCurve3([p0, p0.clone().add(new THREE.Vector3(0, lift * .55, 0)), mid, p1.clone().add(new THREE.Vector3(0, lift * .55, 0)), p1], false, 'centripetal');
+    const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 48, .17, 7), m); tube.castShadow = true; tube.userData.wire = w; g.add(tube);
+    world.add(g); wireObjs.push(g);
+  }
+  document.getElementById('wireCount').textContent = 'Dây: ' + state.wires.length;
+  // nút rút dây đang chọn (thay cho chuột phải trên màn hình cảm ứng)
+  const wa = document.getElementById('wireAct'), w = state.selWire;
+  wa.classList.toggle('show', !!w);
+  if (w) document.getElementById('wireActTxt').textContent = `${jacks.get(w.a)?.name || w.a} ↔ ${jacks.get(w.b)?.name || w.b}`;
+}
+function wireMeshes() { const r = []; wireObjs.forEach(g => g.children.forEach(c => r.push(c))); return r; }
+
+// không lưu dây: mỗi lần vào bài là một lượt mới, bàn trống. Xoá dây cũ đã lưu từ các phiên bản trước.
+try { Object.keys(localStorage).filter(k => k.startsWith('dtcs3d.w.')).forEach(k => localStorage.removeItem(k)); } catch (e) { }
+function saveWires() { }
+function loadWires() { state.wires = []; }
+function wiringChanged() { state.selWire = null; saveWires(); rebuildSim(); rebuildWires(); updateProgress(); }
+
+// ---- hoàn tác / làm lại ----
+const snapshot = () => state.wires.map(w => ({ ...w }));
+function pushUndo() { state.undo.push(snapshot()); if (state.undo.length > 100) state.undo.shift(); state.redo = []; }
+function restore(from, to, label) {
+  if (state.power) { toast('Tắt nguồn trước khi ' + label + '.', 'warn'); return; }
+  if (!from.length) { toast('Không còn thao tác để ' + label + '.', 'info', 1500); return; }
+  to.push(snapshot()); state.wires = from.pop(); wiringChanged();
+}
+const undo = () => restore(state.undo, state.redo, 'hoàn tác');
+const redo = () => restore(state.redo, state.undo, 'làm lại');
+
+// màu dây tự động theo vai trò: âm/GND đen, +12V đỏ, xung kích xanh lá, pha L1/X vàng, còn lại xanh dương
+function autoColor(a, b) {
+  const ids = [a, b].map(x => x.split('.')[1]);
+  if (ids.some(x => /^(gnd|in_n|N|Y|icgnd|sqGnd|sinN|c1n|c2n|vN|aN)$/.test(x))) return 'black';
+  if (ids.some(x => /^(p12|in_p|vcc|sqCT|sinP)$/.test(x))) return 'red';
+  if (ids.some(x => /^([Gg]\d+|[Kk]\d+|s\dG|tG|sG|mG|iG|bG|isoA|isoB|isoIn\d|o555|mv\d|out\d|g\d)$/.test(x))) return 'green';
+  if (ids.some(x => /^(L1|X|c1p)$/.test(x))) return 'yellow';
+  return 'blue';
+}
+
+function addWire(a, b, color) {
+  if (state.power) { state.safety++; toast('Phải TẮT NGUỒN trước khi cắm / rút dây! (lỗi an toàn)', 'err'); updateStats(); return; }
+  if (a === b) return;
+  if (state.wires.some(w => (w.a === a && w.b === b) || (w.a === b && w.b === a))) { toast('Hai chốt này đã có dây nối.', 'warn'); return; }
+  if (state.wires.filter(w => w.a === a || w.b === a).length >= 4 || state.wires.filter(w => w.a === b || w.b === b).length >= 4) { toast('Một chốt chỉ chồng tối đa 4 phích cắm.', 'warn'); return; }
+  pushUndo();
+  const w = { id: wireSeq++, a, b, color: color || (state.color === 'auto' ? autoColor(a, b) : state.color) };
+  state.wires.push(w); wiringChanged();
+  // chế độ Hướng dẫn: phản hồi ngay sau mỗi dây
+  const an = state.sim.an;
+  if (state.mode === 'guide' && an) {
+    if (an.wrongWires.includes(w)) toast(`Dây sai: ${nm(a)} ↔ ${nm(b)} — chọn dây rồi bấm Rút dây (hoặc chuột phải / Ctrl+Z).`, 'err');
+    else if (an.ok) toast('Đã cắm đủ và đúng! Bấm nút Nguồn (Space) để chạy thử.', 'ok');
+    else if (!isMeas(a) && !isMeas(b)) log(`Đúng: ${nm(a)} ↔ ${nm(b)}`, 'ok');
+  }
+}
+function removeWire(w) {
+  if (state.power) { state.safety++; toast('Phải TẮT NGUỒN trước khi rút dây! (lỗi an toàn)', 'err'); updateStats(); return; }
+  pushUndo(); state.wires = state.wires.filter(x => x !== w); wiringChanged();
+}
+
+/* =========================================================================
+   6. PHÂN TÍCH MẠCH
+   ========================================================================= */
+function makeUF() {
+  const p = new Map();
+  const find = x => { if (!p.has(x)) p.set(x, x); let r = x; while (p.get(r) !== r) r = p.get(r); while (p.get(x) !== r) { const n = p.get(x); p.set(x, r); x = n; } return r; };
+  return { find, union: (a, b) => { const ra = find(a), rb = find(b); if (ra !== rb) p.set(ra, rb); } };
+}
+function userUF() {
+  const uf = makeUF();
+  state.wires.forEach(w => uf.union(w.a, w.b));
+  INTERNAL.forEach(([a, b]) => { if (jacks.has(a) && jacks.has(b)) uf.union(a, b); });
+  return uf;
+}
+const isMeas = j => jacks.get(j)?.meas;
+
+function analyze(uf) {
+  // mỗi phần tử sym: mảng cặp [a,b] (có/không hoán đổi) hoặc { opts: [[[từ, sang], ...], ...] } (chọn 1 cách ánh xạ)
+  const ex = state.ex, allOpts = (ex.sym || []).map(sw => Array.isArray(sw) ? [[], sw.flatMap(([a, b]) => [[a, b], [b, a]])] : sw.opts);
+  let best = null, base = ex.conns, opts = allOpts;
+  const evalPick = pick => {
+    const M = {}; opts.forEach((o, i) => o[pick[i]].forEach(([a, b]) => { M[a] = b; }));
+    const m = j => M[j] ?? j;
+    const conns = base.map(([a, b]) => [m(a), m(b)]);
+    const tf = makeUF(), tj = new Set();
+    conns.forEach(([a, b]) => { tf.union(a, b); tj.add(a); tj.add(b); });
+    INTERNAL.forEach(([a, b]) => { if (jacks.has(a) && jacks.has(b) && !isMeas(a)) { tf.union(a, b); tj.add(a); tj.add(b); } });
+    const tRoot = j => tj.has(j) ? tf.find(j) : '#' + j;
+    const missing = conns.filter(([a, b]) => uf.find(a) !== uf.find(b));
+    const wrongWires = state.wires.filter(w => !isMeas(w.a) && !isMeas(w.b) && tRoot(w.a) !== tRoot(w.b));
+    const U = new Set(tj); state.wires.forEach(w => [w.a, w.b].forEach(j => { if (!isMeas(j)) U.add(j); }));
+    const groups = new Map();
+    U.forEach(j => { const r = uf.find(j); if (!groups.has(r)) groups.set(r, new Map()); groups.get(r).set(tRoot(j), j); });
+    const merges = []; groups.forEach(g => { if (g.size > 1) merges.push([...g.values()]); });
+    const score = missing.length + 2 * wrongWires.length + 2 * merges.length;
+    if (!best || score < best.score) best = { score, m, conns, missing, wrongWires, merges, ok: !missing.length && !merges.length };
+    return score;
+  };
+  // phương án phụ (ex.alt, vd. có chèn R01/R02) chỉ xét khi người học đã cắm vào chốt riêng của nó
+  const userJ = new Set(state.wires.flatMap(w => [w.a, w.b])), mainJ = new Set(ex.conns.flat());
+  const bases = [ex.conns, ...(ex.alt || []).filter(c => c.some(p => p.some(j => userJ.has(j) && !mainJ.has(j))))];
+  for (base of bases) {
+  if (best?.score === 0) break;
+  // chỉ giữ các nhóm hoán đổi có liên quan tới chốt của phương án này
+  const bj = new Set(base.flat()); opts = allOpts.filter(o => o.some(op => op.some(([a]) => bj.has(a))));
+  const total = opts.reduce((p, o) => p * o.length, 1);
+  if (total <= 4096) {
+    for (let code = 0; code < total && best?.score !== 0; code++) { let c = code; evalPick(opts.map(o => { const k = c % o.length; c = Math.floor(c / o.length); return k; })); }
+  } else {
+    // dò cục bộ: đổi 1 nhóm, nếu kẹt thì đổi đồng thời 2 nhóm (vd. vị trí SCR + cặp xung G1-1/K1-1)
+    const pick = opts.map(() => 0); let cur = evalPick(pick);
+    const tryMove = (ch) => { const old = ch.map(([i]) => pick[i]); ch.forEach(([i, k]) => pick[i] = k); const sc = evalPick(pick); if (sc < cur) { cur = sc; return true; } ch.forEach(([i], n) => pick[i] = old[n]); return false; };
+    const step = () => {
+      for (let i = 0; i < opts.length; i++) for (let k = 0; k < opts[i].length; k++) if (k !== pick[i] && tryMove([[i, k]])) return true;
+      for (let i = 0; i < opts.length; i++) for (let j = i + 1; j < opts.length; j++)
+        for (let k = 0; k < opts[i].length; k++) for (let l = 0; l < opts[j].length; l++) if ((k !== pick[i] || l !== pick[j]) && tryMove([[i, k], [j, l]])) return true;
+      return false;
+    };
+    for (let it = 0; it < 30 && cur && step(); it++);
+  }
+  }
+  return best;
+}
+function findShort(uf) {
+  for (const g of SOURCES) {
+    const seen = new Map();
+    for (const j of g) { if (!jacks.has(j)) continue; const r = uf.find(j); if (seen.has(r)) return [seen.get(r), j]; seen.set(r, j); }
+  }
+  return null;
+}
+function rebuildSim() {
+  const uf = userUF(), an = state.ex.conns ? analyze(uf) : null, short = findShort(uf), pot = new Map();
+  const put = (j, fn) => { if (!jacks.has(j)) return; const r = uf.find(j); if (!pot.has(r)) pot.set(r, fn); };
+  const svOff = jacks.has('sv.X') && !state.svOn;
+  Object.entries(BASE_POT).forEach(([j, fn]) => { if (!(svOff && j.startsWith('sv.'))) put(j, fn); });
+  if (an && an.ok && state.ex.pot && !(svOff && state.ex.mods.includes('sv'))) Object.entries(state.ex.pot).forEach(([j, fn]) => put(an.m(j), fn));
+  state.sim = { uf, an, short, pot };
+}
+function V(j, t) {
+  const s = state.sim; if (!state.power || !s || !jacks.has(j)) return null;
+  const fn = s.pot.get(s.uf.find(j)); return fn ? fn(t, ST) : null;
+}
+const wired = j => state.wires.some(w => w.a === j || w.b === j);
+
+/* =========================================================================
+   7. GIAO DIỆN
+   ========================================================================= */
+const $ = id => document.getElementById(id);
+const logEl = $('log');
+function log(html, cls = 'info', onClick) { const d = document.createElement('div'); d.className = 'msg ' + cls + (onClick ? ' link' : ''); d.innerHTML = html; if (onClick) { d.onclick = onClick; d.title = 'Bấm để xem trên bàn'; } logEl.prepend(d); while (logEl.children.length > 14) logEl.lastChild.remove(); }
+function showWire(w) { state.selWire = w; rebuildWires(); focusPoint(jacks.get(w.a).pos.clone().lerp(jacks.get(w.b).pos, .5), 40); }
+const fmtT = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+function toast(text, cls = 'info', ms = 3200) { const d = document.createElement('div'); d.className = 'msg ' + cls; d.textContent = text; $('toast').append(d); setTimeout(() => d.remove(), ms); log(text, cls); }
+const nm = j => jacks.get(j)?.name || j;
+function doneSet() { try { return new Set(JSON.parse(localStorage.getItem('dtcs3d.done') || '[]')); } catch (e) { return new Set(); } }
+function markDone(id) { const s = doneSet(); s.add(id); try { localStorage.setItem('dtcs3d.done', JSON.stringify([...s])); } catch (e) { } fillSelect(); }
+
+function fillSelect() {
+  const sel = $('exSel'), cur = sel.value, done = doneSet(); sel.innerHTML = '';
+  [7, 8, 9, 0].forEach(g => {
+    const og = document.createElement('optgroup'); og.label = GROUPS[g];
+    EX.filter(e => e.grp === g).forEach(e => { const o = document.createElement('option'); o.value = e.id; o.textContent = (done.has(e.id) ? '✓ ' : '') + e.title; og.append(o); });
+    sel.append(og);
+  });
+  if (cur) sel.value = cur;
+}
+const VDIVS = [0.5, 1, 2, 5, 10, 20, 50, 100, 200], TDIVS = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100];
+[['v1', VDIVS, ' V'], ['v2', VDIVS, ' V'], ['td', TDIVS, ' ms']].forEach(([id, arr, u]) => { const s = $(id); arr.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v + u; s.append(o); }); });
+$('scMin').onclick = () => panel('scope', false);
+// bảng nổi: chỉ mở khi người dùng bấm. Máy tính: mỗi phía màn hình (trái: phiếu & sơ đồ, phải: dao động ký & nguyên lý)
+// chỉ mở một bảng; điện thoại: mỗi lúc chỉ một bảng
+const isPhone = () => matchMedia('(max-width:820px)').matches;
+const PANELS = { lesson: $('side'), knobs: $('knobPanel'), log: $('logPanel'), views: $('viewsPop'), help: $('help'), scope: $('scopeBox') };
+const DRAWERS = ['lesson', 'knobs', 'log', 'views', 'help'];
+const LEFT = [...DRAWERS, 'sch'], RIGHT = ['scope', 'nl'];
+function closePanel(k) { if (k === 'sch') schToggle(false); else if (k === 'nl') nlToggle(false); else PANELS[k].classList.remove('show'); }
+function closeOthers(keep) {
+  const group = isPhone() ? [...LEFT, ...RIGHT] : LEFT.includes(keep) ? LEFT : RIGHT;
+  group.forEach(k => { if (k !== keep) closePanel(k); });
+}
+function panel(name, show) {
+  const el = PANELS[name]; show = show ?? !el.classList.contains('show');
+  if (show) closeOthers(name);
+  el.classList.toggle('show', show);
+}
+document.querySelectorAll('#rail [data-p]').forEach(b => b.onclick = () => panel(b.dataset.p));
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => panel(b.dataset.close, false));
+$('exTop').onclick = () => panel('lesson');
+$('views').addEventListener('click', e => { if (e.target.closest('button')) panel('views', false); });
+// nút trên thanh công cụ sáng lên khi bảng tương ứng đang mở
+const RAIL = [['railLesson', 'side'], ['railKnobs', 'knobPanel'], ['railScope', 'scopeBox'], ['schBtn', 'schBox'], ['nlBtn', 'prinBox'], ['railViews', 'viewsPop'], ['railLog', 'logPanel'], ['helpBtn', 'help']];
+// bảng nào vừa mở (bằng nút, phím tắt S/N hay mã) thì đóng các bảng cùng phía; đồng thời tô sáng nút tương ứng
+const PKEY = { side: 'lesson', knobPanel: 'knobs', scopeBox: 'scope', schBox: 'sch', prinBox: 'nl', viewsPop: 'views', logPanel: 'log', help: 'help' };
+const wasOpen = new Set();
+const syncRail = () => RAIL.forEach(([b, p]) => $(b).classList.toggle('on', $(p).classList.contains('show')));
+// duyệt từ thay đổi mới nhất: bảng mở sau cùng được giữ lại
+const railMo = new MutationObserver(recs => {
+  for (const r of [...recs].reverse()) {
+    const p = r.target.id, on = r.target.classList.contains('show');
+    if (on && !wasOpen.has(p)) { wasOpen.add(p); closeOthers(PKEY[p]); }
+  }
+  RAIL.forEach(([, p]) => { if (!$(p).classList.contains('show')) wasOpen.delete(p); });
+  syncRail();
+});
+RAIL.forEach(([, p]) => railMo.observe($(p), { attributes: true, attributeFilter: ['class'] }));
+// chọn màu dây và các thao tác phụ (trên điện thoại gom vào nút "…")
+$('colorBtn').onclick = () => $('colorPop').classList.toggle('show');
+$('swatches').addEventListener('click', () => setTimeout(() => $('colorPop').classList.remove('show'), 120));
+$('moreBtn').onclick = () => $('dock').classList.toggle('ext-open');
+document.querySelectorAll('.dock-ext .btn').forEach(b => b.addEventListener('click', () => $('dock').classList.remove('ext-open')));
+addEventListener('pointerdown', e => {
+  if (!e.target.closest('.colorwrap')) $('colorPop').classList.remove('show');
+  if (!e.target.closest('#dock')) $('dock').classList.remove('ext-open');
+});
+// lớp phủ (banner, bảng, sơ đồ) đặt ngay dưới thanh trên dù nó cao bao nhiêu
+new ResizeObserver(() => $('stage').style.setProperty('--tb', $('topbar').offsetHeight + 'px')).observe($('topbar'));
+$('wireActBtn').onclick = () => { if (state.selWire) removeWire(state.selWire); };
+
+// màn hình chọn chế độ trước khi vào bàn thí nghiệm
+const startScr = $('startScr');
+let modePick = 'practice';
+function syncPick() { startScr.querySelectorAll('.mode-opt').forEach(b => { const on = b.dataset.pick === modePick; b.classList.toggle('on', on); b.setAttribute('aria-checked', on); }); }
+startScr.querySelectorAll('.mode-opt').forEach(b => b.onclick = () => { modePick = b.dataset.pick; syncPick(); });
+function openStart() {
+  $('startEx').innerHTML = $('exSel').innerHTML; $('startEx').value = state.ex.id;
+  modePick = state.mode === 'exam' ? 'exam' : 'practice'; syncPick();
+  DRAWERS.forEach(k => PANELS[k].classList.remove('show'));
+  startScr.classList.add('show'); setTimeout(() => startScr.querySelector('.mode-opt.on')?.focus(), 60);
+}
+$('startGo').onclick = () => {
+  setMode(modePick === 'exam' ? 'exam' : 'practice');
+  state.demo = false; loadExercise($('startEx').value);
+  startScr.classList.remove('show');
+};
+$('modeChip').onclick = openStart; $('modeChange').onclick = openStart;
+// phím tắt không chạy khi đang ở màn hình chọn chế độ; Esc đóng các bảng nổi
+addEventListener('keydown', e => {
+  if (e.target.closest?.('.dd-pop')) return; // đang chọn trong ô xổ xuống: để nó tự xử lý phím
+  if (startScr.classList.contains('show')) { e.stopImmediatePropagation(); return; }
+  if (e.key === 'Escape') { DRAWERS.forEach(k => PANELS[k].classList.remove('show')); $('colorPop').classList.remove('show'); $('dock').classList.remove('ext-open'); }
+}, true);
+
+function loadExercise(id) {
+  const ex = EX.find(e => e.id === id) || EX[0];
+  state.ex = ex; state.power = false; state.svOn = false; state.pending = null; state.selWire = null; state.checks = 0; state.failed = 0; state.safety = 0; state.hints = 0; state.t0 = performance.now(); state.doneAt = null;
+  state.undo = []; state.redo = []; $('result').style.display = 'none';
+  hint.length = 0;
+  try { localStorage.setItem('dtcs3d.cur', ex.id); } catch (e) { }
+  $('exSel').value = ex.id; $('exTitle').textContent = ex.title; $('exGoal').textContent = ex.goal;
+  $('exSteps').innerHTML = ex.steps.map(s => `<li>${s}</li>`).join(''); $('exNote').textContent = ex.note || '';
+  document.querySelectorAll('.knob').forEach(k => k.style.display = (ex.knobs || []).includes(k.dataset.k) ? '' : 'none');
+  $('knobSec').style.display = (ex.knobs || []).length ? '' : 'none';
+  $('railKnobs').disabled = !(ex.knobs || []).length; if ($('railKnobs').disabled) $('knobPanel').classList.remove('show');
+  $('exTitleTop').textContent = ex.title;
+  $('v1').value = ex.scope.v1; $('v2').value = ex.scope.v2; $('td').value = ex.scope.td;
+  buildWorld(ex); loadWires(); rebuildSim(); rebuildWires(); updatePower(); updateStats(); updateButtons(); updateProgress(); if (typeof schUpdate === 'function') schUpdate();
+  logEl.innerHTML = ''; log(`Đã mở bài <b>${ex.title}</b>. Nguồn đang tắt – bắt đầu cắm dây.`);
+}
+
+// ---- chế độ học ----
+const MODE_DESC = {
+  guide: 'Đường tím trên bàn chỉ dây cần cắm tiếp theo, báo đúng/sai ngay khi cắm.',
+  practice: 'Tự cắm theo các bước. Cần trợ giúp thì bấm Gợi ý (chỉ dây tiếp theo hoặc dây đang sai) hoặc Kiểm tra mạch.',
+  exam: 'Không gợi ý, không hiện tiến độ. Bật nguồn khi chắc chắn – mỗi lần sai bị trừ điểm.',
+};
+function setMode(m) {
+  state.mode = m; try { localStorage.setItem('dtcs3d.mode', m); } catch (e) { }
+  const exam = m === 'exam', name = exam ? 'Kiểm tra' : 'Luyện tập';
+  document.body.classList.toggle('exam', exam);
+  $('modeChipTxt').textContent = name; $('modeName').textContent = name;
+  $('modeDesc').textContent = MODE_DESC[m];
+  if (state.ex) { updateButtons(); updateProgress(); rebuildWires(); schUpdate(); }
+}
+function updateButtons() {
+  const free = !state.ex.conns, exam = state.mode === 'exam';
+  $('bCheck').disabled = free;
+  ['bHint', 'bAnswer', 'bWrong'].forEach(b => $(b).disabled = free || exam);
+}
+function updateProgress() {
+  const ex = state.ex, an = state.sim?.an, bar = $('progBar'), txt = $('progTxt'), err = $('progErr'), nx = $('next');
+  if (!ex.conns || !an) { bar.style.width = '0'; txt.textContent = 'Chế độ tự do – không chấm'; err.textContent = ''; nx.style.display = 'none'; $('wireCount').textContent = 'Dây: ' + state.wires.length; return; }
+  const tot = an.conns.length, ok = tot - an.missing.length, bad = an.wrongWires.length;
+  if (state.mode === 'exam') {
+    bar.style.width = '0'; txt.textContent = `Đã cắm ${state.wires.length} dây`; err.textContent = ''; $('wireCount').textContent = `Dây: ${state.wires.length}`;
+  } else {
+    bar.style.width = (100 * ok / tot) + '%'; txt.textContent = `Kết nối đúng: ${ok}/${tot}`;
+    err.textContent = bad ? `${bad} dây sai` : (an.ok ? 'Hoàn tất' : ''); err.style.color = bad ? 'var(--err)' : 'var(--ok)';
+    $('wireCount').textContent = `${ok}/${tot} dây đúng` + (bad ? ` · ${bad} sai` : '');
+  }
+  if (state.mode !== 'guide') { nx.style.display = 'none'; return; }
+  nx.style.display = 'block';
+  if (an.ok) nx.innerHTML = '<b>Đã cắm đủ dây!</b> Bấm nút Nguồn (hoặc Space) để chạy thử.';
+  else if (bad) nx.innerHTML = `<b>Rút dây sai:</b><br>${nm(an.wrongWires[0].a)} ↔ ${nm(an.wrongWires[0].b)}<br><small>Dây đang tô đỏ – chọn dây rồi bấm Rút dây, hoặc chuột phải / Ctrl+Z.</small>`;
+  else if (an.missing.length) {
+    const [a, b] = an.missing[0];
+    nx.innerHTML = `<b>Dây tiếp theo (${ok + 1}/${tot}):</b><br>${nm(a)}  ↔  ${nm(b)}<br><small>Đường tím trên bàn nối 2 chốt cần cắm.</small><br><button class="btn" id="bAuto1"><svg class="ic"><use href="#i-plug"/></svg>Cắm giúp dây này</button> <button class="btn" id="bLook1"><svg class="ic"><use href="#i-locate"/></svg>Xem vị trí</button>`;
+    $('bAuto1').onclick = () => { state.hints++; updateStats(); addWire(a, b); };
+    $('bLook1').onclick = () => focusPoint(jacks.get(a).pos.clone().lerp(jacks.get(b).pos, .5), 30 + jacks.get(a).pos.distanceTo(jacks.get(b).pos) * 0.8);
+  } else nx.innerHTML = 'Không thiếu dây nhưng có các nút bị nối chung sai – bấm Kiểm tra.';
+}
+function showResult() {
+  if (state.demo) return;
+  const t = (state.doneAt - state.t0) / 1000, score = Math.max(0, 100 - 10 * state.failed - 15 * state.safety - 3 * state.hints);
+  const modeName = state.mode === 'exam' ? 'Kiểm tra' : 'Luyện tập';
+  $('resultCard').innerHTML = `<p class="eyebrow">${state.ex.title} · ${modeName}</p><h2>Mạch hoạt động</h2>
+    <div class="score">${score}<small>/100</small></div>
+    <div class="stats"><span>Thời gian ${fmtT(t)}</span><span>Lần sai: ${state.failed}</span><span>Gợi ý: ${state.hints}</span><span>Lỗi an toàn: ${state.safety}</span></div>
+    <div class="btns"><button class="btn" id="rStay">Ở lại quan sát</button><button class="btn primary" id="rNext">Bài tiếp theo</button></div>`;
+  $('result').style.display = 'flex';
+  $('rStay').onclick = () => $('result').style.display = 'none';
+  $('rNext').onclick = () => { const i = EX.indexOf(state.ex); state.demo = false; loadExercise(EX[(i + 1) % EX.length].id); };
+}
+$('exSel').onchange = e => { state.demo = false; loadExercise(e.target.value); };
+
+function updatePower() {
+  const b = $('power'); b.classList.toggle('on', state.power); b.textContent = state.power ? 'Nguồn: bật' : 'Nguồn: tắt';
+  leds.forEach(l => l.m.emissiveIntensity = state.power && (!l.sw || state.svOn) ? 2.2 : 0);
+  if (swObj) { swObj.rocker.rotation.z = state.svOn ? -.22 : .22; swObj.mark.material.emissiveIntensity = state.svOn ? 1.5 : 0; }
+}
+// công tắc POWER ON của bo đồng bộ: bo chỉ có điện khi bật cả công tắc này và NGUỒN chung
+function toggleSvSwitch() {
+  state.svOn = !state.svOn; rebuildSim(); updatePower();
+  log(state.svOn ? 'Đã bật công tắc POWER ON của bo đồng bộ.' : 'Đã tắt công tắc POWER ON của bo đồng bộ.', state.svOn ? 'ok' : 'info');
+  if (state.power && state.svOn && state.ex.conns && state.sim.an.ok) { toast('Mạch đúng – hệ thống hoạt động. Quan sát đèn và dao động ký.', 'ok'); finish(); }
+}
+$('power').onclick = togglePower;
+function togglePower() {
+  if (state.power) { state.power = false; updatePower(); log('Đã tắt nguồn.'); return; }
+  rebuildSim(); const s = state.sim;
+  if (s.short) { state.safety++; updateStats(); toast(`NGẮN MẠCH giữa ${nm(s.short[0])} và ${nm(s.short[1])}! Cầu chì nhảy – nguồn không bật được.`, 'err', 5000); flashJacks(s.short); return; }
+  state.power = true; updatePower();
+  if (!state.ex.conns) { log('Nguồn đã bật (chế độ tự do).', 'ok'); return; }
+  if (s.an.ok && jacks.has('sv.X') && !state.svOn) { toast('Nguồn chung đã bật nhưng công tắc POWER ON trên bo đồng bộ còn TẮT → bo chưa có điện. Bấm vào công tắc để bật.', 'warn', 5000); return; }
+  if (s.an.ok) { toast('Mạch đúng – hệ thống hoạt động. Quan sát đèn và dao động ký.', 'ok'); finish(); }
+  else { state.failed++; updateStats(); toast('Nguồn đã bật nhưng mạch chưa đúng → mạch không hoạt động. Tắt nguồn và kiểm tra lại (bị tính 1 lần sai).', 'warn', 4500); }
+}
+function finish() { if (!state.doneAt) { state.doneAt = performance.now(); markDone(state.ex.id); updateStats(); setTimeout(showResult, 1800); } }
+
+function flashWires(ws) { state.flash = new Set(ws.map(w => w.id)); state.flashUntil = performance.now() + 3500; rebuildWires(); }
+const hint = [];
+function flashJacks(ids) { hint.length = 0; ids.forEach(i => hint.push(i)); hintUntil = performance.now() + 6000; }
+let hintUntil = 0;
+
+$('bCheck').onclick = () => {
+  rebuildSim(); state.checks++; updateStats(); const s = state.sim, an = s.an;
+  if (s.short) { toast(`Có ngắn mạch nguồn: ${nm(s.short[0])} ↔ ${nm(s.short[1])}.`, 'err'); flashJacks(s.short); }
+  if (an.ok) { toast('Mạch đã cắm ĐÚNG! Bật nguồn để chạy thử.', 'ok'); return; }
+  state.failed++; updateStats();
+  if (state.mode === 'exam') { toast(`Mạch chưa đúng (đã cắm ${state.wires.length} dây). Chế độ Kiểm tra không chỉ ra lỗi.`, 'err'); return; }
+  const parts = [];
+  if (an.missing.length) parts.push(`thiếu <b>${an.missing.length}</b> kết nối`);
+  if (an.wrongWires.length) parts.push(`<b>${an.wrongWires.length}</b> dây cắm sai (đang nhấp nháy đỏ)`);
+  an.wrongWires.slice(0, 6).reverse().forEach(w => log(`Dây sai: ${nm(w.a)} ↔ ${nm(w.b)}`, 'warn', () => showWire(w)));
+  log('Mạch chưa đúng: ' + (parts.join(', ') || 'có các nút bị nối chung sai') + '.', 'err');
+  if (!an.wrongWires.length) an.merges.slice(0, 3).forEach(g => log('Các chốt không được nối chung: ' + g.map(nm).join(' ↔ '), 'warn'));
+  flashWires(an.wrongWires);
+};
+$('bHint').onclick = () => {
+  rebuildSim(); const an = state.sim.an;
+  if (an.wrongWires.length) { flashWires(an.wrongWires); toast(`Gợi ý: dây ${nm(an.wrongWires[0].a)} ↔ ${nm(an.wrongWires[0].b)} đang cắm sai.`, 'warn', 5000); state.hints++; updateStats(); return; }
+  if (!an.missing.length) { toast(an.ok ? 'Mạch đã đủ dây.' : 'Không còn thiếu dây – kiểm tra các nút bị nối chung sai.', 'info'); return; }
+  const [a, b] = an.missing[0]; flashJacks([a, b]); state.hints++; updateStats();
+  toast(`Gợi ý – nối: ${nm(a)}  ↔  ${nm(b)}`, 'info', 6000);
+};
+$('bWrong').onclick = () => {
+  if (state.power) { toast('Tắt nguồn trước!', 'err'); return; }
+  rebuildSim(); const n = state.sim.an.wrongWires.length; if (!n) { toast('Không có dây sai.', 'info', 1500); return; }
+  pushUndo(); state.wires = state.wires.filter(w => !state.sim.an.wrongWires.includes(w)); wiringChanged(); log(`Đã xóa ${n} dây sai (Ctrl+Z để hoàn tác).`);
+};
+$('bAnswer').onclick = () => {
+  if (state.power) { toast('Tắt nguồn trước!', 'err'); return; }
+  if (!confirm('Hiện đáp án: xóa dây sai và tự cắm các dây còn thiếu?')) return;
+  applyAnswer();
+};
+function applyAnswer() {
+  rebuildSim(); const an = state.sim.an;
+  pushUndo(); state.wires = state.wires.filter(w => !an.wrongWires.includes(w));
+  const uf = userUF();
+  an.conns.forEach(([a, b]) => {
+    if (uf.find(a) === uf.find(b)) return; uf.union(a, b);
+    state.wires.push({ id: wireSeq++, a, b, color: autoColor(a, b) });
+  });
+  state.hints += 5; wiringChanged(); updateStats(); log('Đã cắm theo đáp án (tính +5 gợi ý).', 'warn');
+}
+$('bClear').onclick = () => { if (state.power) { toast('Tắt nguồn trước!', 'err'); return; } if (state.wires.length && confirm('Xóa toàn bộ dây? (có thể Ctrl+Z để lấy lại)')) { pushUndo(); state.wires = []; wiringChanged(); } };
+$('bUndo').onclick = undo; $('bRedo').onclick = redo;
+
+function updateStats() {
+  const t = ((state.doneAt || performance.now()) - state.t0) / 1000;
+  $('stats').innerHTML = `<span>Thời gian ${fmtT(t)}${state.doneAt ? ' (xong)' : ''}</span><span>Kiểm tra: ${state.checks}</span><span>Lần sai: ${state.failed}</span><span>Gợi ý: ${state.hints}</span><span>Lỗi an toàn: ${state.safety}</span>`;
+  $('bUndo').disabled = !state.undo.length; $('bRedo').disabled = !state.redo.length;
+}
+setInterval(updateStats, 1000);
+
+// màu dây: A = tự động theo vai trò, phím 0–6
+const swEl = $('swatches');
+const COLOR_NAMES = { auto: 'Tự động', red: 'Đỏ', black: 'Đen', yellow: 'Vàng', blue: 'Xanh dương', green: 'Xanh lá', white: 'Trắng' };
+const swatchList = [['auto', null], ...WIRE_COLORS];
+function pickColor(n) {
+  state.color = n; swEl.querySelectorAll('.sw').forEach(x => x.classList.toggle('sel', x.dataset.c === n));
+  const dot = $('colorDot'); dot.className = 'sw' + (n === 'auto' ? ' auto' : ''); dot.style.background = n === 'auto' ? '' : WIRE_COLORS.find(c => c[0] === n)[1];
+}
+swatchList.forEach(([n, h], i) => {
+  const d = document.createElement('div'); d.className = 'sw' + (n === 'auto' ? ' auto' : ''); d.dataset.c = n;
+  if (h) d.style.background = h; else d.textContent = 'A';
+  d.title = `${COLOR_NAMES[n]} (phím ${i})` + (n === 'auto' ? ': GND đen, +12V đỏ, xung kích xanh lá, pha vàng' : '');
+  d.onclick = () => pickColor(n); swEl.append(d);
+});
+pickColor(state.color);
+
+// trợ giúp & dao động ký kéo thả
+function makeDraggable(box) {
+  const hd = box.querySelector('.hd'); let st = null;
+  hd.addEventListener('pointerdown', e => { if (e.target.closest('select,button')) return; const r = box.getBoundingClientRect(), pr = box.parentElement.getBoundingClientRect(); st = { dx: e.clientX - r.left, dy: e.clientY - r.top, pr }; hd.setPointerCapture(e.pointerId); });
+  hd.addEventListener('pointermove', e => {
+    if (!st) return; const x = Math.max(0, Math.min(st.pr.width - box.offsetWidth, e.clientX - st.pr.left - st.dx)), y = Math.max(0, Math.min(st.pr.height - 40, e.clientY - st.pr.top - st.dy));
+    Object.assign(box.style, { left: x + 'px', top: y + 'px', right: 'auto', bottom: 'auto' });
+  });
+  hd.addEventListener('pointerup', () => st = null);
+}
+makeDraggable($('scopeBox')); makeDraggable($('schBox'));
+
+// sơ đồ mạch trong giáo trình (ảnh chụp ở thư mục so-do/) cho từng bài
+const B7 = 'Giáo trình Bài 7', B8 = 'Giáo trình Bài 8', B9 = 'Slide Bài 9';
+const SCH = {
+  '7.1a': [['7.1a', 'Hình 7.3', B7 + ', trang 4']], '7.1b': [['7.1b', 'Hình 7.4', B7 + ', trang 5']],
+  '7.2-bjt': [['7.2-bjt', 'Hình 7.5', B7 + ', trang 6']], '7.2-mos': [['7.2-mos', 'Hình 7.6', B7 + ', trang 7']], '7.2-igbt': [['7.2-igbt', 'Hình 7.7', B7 + ', trang 9']],
+  '7.2.1': [['7.2.1b', 'Hình 7.10 (đấu nối)', B7 + ', trang 12'], ['7.2.1', 'Hình 7.11 (nguyên lý)', B7 + ', trang 13']],
+  '7.2.2': [['7.2.2', 'Hình 7.12', B7 + ', trang 13']], '7.3.1': [['7.3.1', 'Hình 7.13', B7 + ', trang 14']], '7.3.2': [['7.3.2', 'Hình 7.15', B7 + ', trang 15']],
+  '8.1.1': [['8.1.1', 'Hình 8.4', B8 + ', trang 11']], '8.1.2': [['8.1.2', 'Hình 8.5', B8 + ', trang 14']],
+  '8.1.3': [['8.1.3', 'Hình 8.6', B8 + ', trang 17']], '8.1.3b': [['8.1.3b', 'Hình 8.7', B8 + ', trang 19']],
+  '8.2.1': [['8.2.1', 'Hình 8.8', B8 + ', trang 21']], '8.2.2': [['8.2.2', 'Hình 8.9', B8 + ', trang 24']],
+  '8.2.3': [['8.2.3', 'Hình 8.10', B8 + ', trang 27']], '8.2.4': [['8.2.4', 'Hình 8.11', B8 + ', trang 30']], '8.3': [['8.3', 'Hình 8.12', B8 + ', trang 33']],
+  '9.2r': [['9.2', 'Hình 9.7', B9 + ', slide 16']], '9.2': [['9.2', 'Hình 9.7 (bài này thêm cuộn cảm L nối tiếp R)', B9 + ', slide 16']],
+  '9.1a': [['9.1a', 'Hình 9.3 – Buck', B9 + ', slide 7']], '9.1b': [['9.1b', 'Hình 9.4 – Boost', B9 + ', slide 9']],
+  '9.1c': [['9.1c', 'Hình 9.5 – Buck-Boost', B9 + ', slide 11']], '9.1d': [['9.1d', 'Bộ 4 khóa (Four-Quadrant)', B9 + ', slide 13']],
+  '9.3a': [['9.3a', 'Nghịch lưu sóng vuông', B9 + ', slide 19']], '9.3b': [['9.3b', 'Nghịch lưu sóng sin', B9 + ', slide 22']],
+};
+const SCH_NOTE = 'Giáo trình vẽ theo module PEC-502/PE-511; trên bàn này: OUT1/A ≡ G1, OUT1/B ≡ K1 (TF-A), OUT3/A ≡ G2, OUT3/B ≡ K2 (TF-B) của bo đồng bộ; đồng bộ cho TCA785 lấy từ 220VAC (L/N góc trên trái, nối từ L/N cạnh POWER ON).';
+let schIdx = 0, schZoom = 0; // schZoom = 0: vừa khung
+function schFit() {
+  const img = $('schImg'), v = $('schView'); if (!img.naturalWidth) return;
+  const w = schZoom ? img.naturalWidth * schZoom : Math.min(img.naturalWidth * 1.6, v.clientWidth - 2, (v.clientHeight - 2) * img.naturalWidth / img.naturalHeight);
+  img.style.width = Math.max(80, w) + 'px'; v.classList.toggle('big', !!schZoom);
+}
+function schShow(i) {
+  const list = SCH[state.ex.id]; if (!list) return; schIdx = Math.min(i, list.length - 1); schZoom = 0;
+  const [f, fig, src] = list[schIdx];
+  $('schImg').src = 'so-do/' + f + '.png'; $('schTitle').textContent = fig;
+  $('schCap').textContent = src + (state.ex.schNote ? ' · ' + state.ex.schNote : state.ex.mods.includes('sv') ? ' · ' + SCH_NOTE : '');
+  const tabs = $('schTabs'); tabs.innerHTML = '';
+  if (list.length > 1) list.forEach((x, k) => { const b = document.createElement('button'); b.className = 'btn' + (k === schIdx ? ' on' : ''); b.textContent = k + 1; b.title = x[1]; b.onclick = () => schShow(k); tabs.append(b); });
+}
+function schUpdate() {
+  nlUpdate();
+  const exam = state.mode === 'exam', has = !!SCH[state.ex.id] && !exam; $('schBtn').disabled = !has;
+  $('schBtn').title = has ? 'Xem sơ đồ mạch trong giáo trình (phím S)' : exam ? 'Không dùng được trong chế độ Kiểm tra' : 'Bài này không có sơ đồ trong giáo trình';
+  if (!has) $('schBox').classList.remove('show'); else if ($('schBox').classList.contains('show')) schShow(0);
+}
+// chế độ nguyên lý (nguyen-ly.js)
+const NL = window.NguyenLy;
+const setKnob = (id, v) => { $(id).value = v; $(id).dispatchEvent(new Event('input')); };
+NL.mount($('prinBox'), { getAlpha: () => ST.alphaDeg, setAlpha: v => setKnob('alpha', v), getDuty: () => ST.duty, setDuty: v => setKnob('duty', v), getQ4: () => ST.q4, setQ4: v => setKnob('q4', v) });
+makeDraggable($('prinBox'));
+function nlUpdate() {
+  const exam = state.mode === 'exam', has = NL.has(state.ex.id) && !exam; $('nlBtn').disabled = !has;
+  $('nlBtn').title = has ? 'Mạch tối giản, dòng điện chạy và dạng sóng để hiểu nguyên lý (phím N)' : exam ? 'Không dùng được trong chế độ Kiểm tra' : 'Bài này không có phần nguyên lý';
+  if (NL.visible()) has ? NL.show(state.ex.id) : NL.hide();
+}
+function nlToggle(show = !NL.visible()) { if (show && NL.has(state.ex.id) && state.mode !== 'exam') NL.show(state.ex.id); else NL.hide(); }
+$('nlBtn').onclick = () => nlToggle();
+function schToggle(show = !$('schBox').classList.contains('show')) { if (show && (!SCH[state.ex.id] || state.mode === 'exam')) return; $('schBox').classList.toggle('show', show); if (show) schShow(0); }
+$('schImg').onload = schFit; new ResizeObserver(() => { if (!schZoom) schFit(); }).observe($('schView'));
+$('schBtn').onclick = () => schToggle(); $('schX').onclick = () => schToggle(false);
+$('schFit').onclick = () => { schZoom = 0; schFit(); };
+const schCur = () => $('schImg').clientWidth / ($('schImg').naturalWidth || 1);
+$('schIn').onclick = () => { schZoom = Math.min(4, schCur() * 1.25); schFit(); };
+$('schOut').onclick = () => { schZoom = Math.max(.2, schCur() / 1.25); schFit(); };
+$('schView').onclick = e => {
+  const v = $('schView'), r = v.getBoundingClientRect(), fx = (e.clientX - r.left + v.scrollLeft) / v.scrollWidth, fy = (e.clientY - r.top + v.scrollTop) / v.scrollHeight;
+  schZoom = schZoom ? 0 : Math.max(1.5, schCur() * 2); schFit();
+  if (schZoom) { v.scrollLeft = fx * v.scrollWidth - v.clientWidth / 2; v.scrollTop = fy * v.scrollHeight - v.clientHeight / 2; }
+};
+
+// núm
+function bindKnob(id, fmt, set) { const el = $(id); el.value = { alpha: ST.alphaDeg, f555: ST.f555, finv: ST.finv, duty: ST.duty, q4: ST.q4 }[id]; const upd = () => { set(+el.value); $(id + 'V').textContent = fmt(+el.value); }; el.oninput = upd; upd(); }
+bindKnob('alpha', v => `${v}°`, v => { ST.alphaDeg = v; ST.a = v * Math.PI / 180; });
+bindKnob('f555', v => `${v} Hz`, v => { ST.f555 = v; });
+bindKnob('finv', v => `${v} Hz`, v => { ST.finv = v; });
+bindKnob('duty', v => `${v} %`, v => { ST.duty = v; ST.D = v / 100; });
+bindKnob('q4', v => v ? 'Q3-Q4 ON' : 'Q1-Q2 ON', v => { ST.q4 = v; });
+
+/* =========================================================================
+   8. TƯƠNG TÁC CHUỘT
+   ========================================================================= */
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
+const tip = $('tip');
+const ringHover = new THREE.Mesh(GEO.ring, new THREE.MeshBasicMaterial({ color: '#4cc2ff' })); ringHover.rotation.x = Math.PI / 2; ringHover.visible = false; scene.add(ringHover);
+const ringPend = new THREE.Mesh(GEO.ring, new THREE.MeshBasicMaterial({ color: '#3cff8a' })); ringPend.rotation.x = Math.PI / 2; ringPend.visible = false; scene.add(ringPend);
+const netRings = Array.from({ length: 40 }, () => { const r = new THREE.Mesh(GEO.ring, new THREE.MeshBasicMaterial({ color: '#9be7ff', transparent: true, opacity: .55 })); r.rotation.x = Math.PI / 2; r.scale.setScalar(.8); r.visible = false; scene.add(r); return r; });
+const hintRings = Array.from({ length: 2 }, () => { const r = new THREE.Mesh(GEO.ring, new THREE.MeshBasicMaterial({ color: '#ff4fd8' })); r.rotation.x = Math.PI / 2; r.visible = false; scene.add(r); return r; });
+// dây xem trước (khi đang nối) và dây "ma" chỉ đường (chế độ Hướng dẫn)
+const preview = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color: '#3cff8a', transparent: true, opacity: .75 })); preview.visible = false; scene.add(preview);
+const ghost = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color: '#ff4fd8', transparent: true, opacity: .5, depthWrite: false })); ghost.visible = false; scene.add(ghost);
+const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -(PT + JH));
+function arcTube(mesh, p0, p1, r) {
+  const d = p0.distanceTo(p1), mid = p0.clone().lerp(p1, .5); mid.y += 2.5 + d * .22;
+  mesh.geometry.dispose(); mesh.geometry = new THREE.TubeGeometry(new THREE.QuadraticBezierCurve3(p0, mid, p1), 40, r, 6);
+}
+let ghostKey = '';
+function setGhost(a, b) {
+  const key = a + '|' + b;
+  if (key !== ghostKey) { ghostKey = key; arcTube(ghost, jacks.get(a).pos.clone().setY(jacks.get(a).pos.y + .3), jacks.get(b).pos.clone().setY(jacks.get(b).pos.y + .3), .22); }
+  ghost.visible = true;
+}
+
+const _v = new THREE.Vector3();
+function setRay(ev) {
+  const r = canvas.getBoundingClientRect(), mx = ev.clientX - r.left, my = ev.clientY - r.top;
+  mouse.set(mx / r.width * 2 - 1, -(my / r.height) * 2 + 1); ray.setFromCamera(mouse, camera);
+  return { r, mx, my };
+}
+// Chọn đối tượng dưới con trỏ. Ưu tiên chốt (kể cả khi dây che phía trước), có "hút" về chốt gần nhất trên màn hình.
+// opt.jacksOnly: chỉ chọn chốt · opt.noSnap: không hút · opt.preferWire: ưu tiên dây (chuột phải để rút)
+function pick(ev, opt = {}) {
+  const { r, mx, my } = setRay(ev);
+  const hits = ray.intersectObjects(opt.jacksOnly ? jackMeshes : [...jackMeshes, ...wireMeshes()], false);
+  const hw = hits.find(h => h.object.userData.wire);
+  if (opt.preferWire && hw) return { wire: hw.object.userData.wire };
+  const hj = hits.find(h => h.object.userData.jack);
+  if (hj) return { jack: hj.object.userData.jack };
+  if (!opt.jacksOnly && ray.intersectObjects(swMeshes, false).length) return { sw: true };
+  if (!opt.noSnap) {
+    let best = null, bd = opt.jacksOnly ? 34 : 20;
+    for (const [id, J] of jacks) {
+      _v.copy(J.pos).project(camera); if (_v.z > 1) continue;
+      const d = Math.hypot((_v.x + 1) / 2 * r.width - mx, (1 - _v.y) / 2 * r.height - my);
+      if (d < bd) { bd = d; best = id; }
+    }
+    if (best && (opt.jacksOnly || !hw || bd < 12)) return { jack: best };
+  }
+  if (hw) return { wire: hw.object.userData.wire };
+  if (opt.jacksOnly) return {};
+  const hm = ray.intersectObjects(modBoxes, false)[0];
+  return hm ? { mod: hm.object.userData.mod } : {};
+}
+
+let down = null, drag = null, hover = {};
+controls.addEventListener('start', () => { camAnim = null; });
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('pointerdown', e => {
+  down = { x: e.clientX, y: e.clientY, b: e.button };
+  // nhấn giữ trên chốt → kéo để nối dây (tạm khoá xoay camera)
+  if (e.button === 0) { const h = pick(e, { jacksOnly: true, noSnap: true }); if (h.jack) { drag = h.jack; controls.enabled = false; } }
+});
+addEventListener('pointerup', e => {
+  if (!down) return;
+  const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6, b = down.b; down = null; controls.enabled = true;
+  if (e.target !== canvas && !drag) return;
+  if (drag) {
+    const from = drag; drag = null;
+    if (moved) { const h = pick(e, { jacksOnly: true }); if (h.jack && h.jack !== from) { state.pending = null; addWire(from, h.jack); } else toast('Thả vào một chốt để cắm dây.', 'info', 1500); return; }
+  }
+  if (moved) return;
+  const h = pick(e, { preferWire: b === 2, jacksOnly: !!state.pending });
+  if (b === 2) { if (h.wire) removeWire(h.wire); else state.pending = null; return; }
+  if (b !== 0) return;
+  if (h.jack) {
+    if (!state.pending) { state.pending = h.jack; if (state.selWire) { state.selWire = null; rebuildWires(); } }
+    else if (state.pending === h.jack) state.pending = null;
+    else { const a = state.pending; state.pending = null; addWire(a, h.jack); }
+  } else if (h.sw) { state.pending = null; toggleSvSwitch();
+  } else if (h.wire) { state.pending = null; state.selWire = state.selWire === h.wire ? null : h.wire; rebuildWires(); }
+  else { state.pending = null; if (state.selWire) { state.selWire = null; rebuildWires(); } }
+});
+canvas.addEventListener('dblclick', e => { const h = pick(e, { noSnap: true }); state.pending = null; if (h.jack) focusPoint(jacks.get(h.jack).pos, 22); else if (h.mod) focusModule(h.mod); });
+addEventListener('pointermove', e => {
+  const src = drag || state.pending;
+  if (e.target !== canvas && !drag) { hover = {}; return; }
+  hover = pick(e, { jacksOnly: !!src }); hover.ev = e;
+  if (src) {
+    const p = new THREE.Vector3(), a = jacks.get(src).pos.clone(); a.y += .3;
+    const end = hover.jack && hover.jack !== src ? jacks.get(hover.jack).pos.clone().setY(jacks.get(hover.jack).pos.y + .3) : (ray.ray.intersectPlane(plane, p) ? p : null);
+    if (end && end.distanceTo(a) > .5) { arcTube(preview, a, end, .16); preview.visible = true; } else preview.visible = false;
+  }
+});
+canvas.addEventListener('pointerleave', () => { if (!drag) hover = {}; });
+addEventListener('keydown', e => {
+  const tag = e.target.tagName;
+  if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+  const k = e.key.toLowerCase(), mod = e.ctrlKey || e.metaKey;
+  if (e.key === 'Escape') { schToggle(false); nlToggle(false); state.pending = null; drag = null; controls.enabled = true; $('result').style.display = 'none'; if (state.selWire) { state.selWire = null; rebuildWires(); } return; }
+  if (mod && k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if (mod && k === 'y') { e.preventDefault(); redo(); return; }
+  if (mod || e.altKey) return;
+  if ((e.key === 'Delete' || e.key === 'Backspace') && state.selWire) { e.preventDefault(); removeWire(state.selWire); return; }
+  if (e.key === ' ' && tag !== 'BUTTON') { e.preventDefault(); togglePower(); return; }
+  if (k === 'c' && !$('bCheck').disabled) $('bCheck').click();
+  else if (k === 'h' && !$('bHint').disabled) $('bHint').click();
+  else if (k === 's') schToggle();
+  else if (k === 'n') nlToggle();
+  else if (k === 'p' && NL.visible()) NL.togglePlay();
+  else if (k === 't') topView();
+  else if (k === 'r') resetCam();
+  else if (/^[0-6]$/.test(k)) pickColor(swatchList[+k][0]);
+});
+
+let bannerTxt = '', bannerCls = '';
+function setBanner(t, c = '') { if (t === bannerTxt && c === bannerCls) return; bannerTxt = t; bannerCls = c; const b = $('banner'); b.textContent = t; b.className = c; b.style.display = t ? 'block' : 'none'; }
+
+function updateOverlay(now) {
+  ringHover.visible = false; tip.style.display = 'none'; netRings.forEach(r => r.visible = false);
+  const src = drag || state.pending;
+  if (hover.jack) {
+    const J = jacks.get(hover.jack); ringHover.position.copy(J.pos); ringHover.position.y += .05; ringHover.visible = true;
+    const uf = state.sim.uf, r0 = uf.find(hover.jack); let i = 0;
+    for (const [id, K] of jacks) { if (id !== hover.jack && wired(id) && uf.find(id) === r0 && i < netRings.length) { const rr = netRings[i++]; rr.position.copy(K.pos); rr.position.y += .05; rr.visible = true; } }
+    let extra = ''; if (state.power) { const v = V(hover.jack, now / 1000); if (v !== null) extra = ` · u = ${v.toFixed(1)} V`; }
+    tip.textContent = (src && src !== hover.jack ? (drag ? 'Thả để nối → ' : 'Bấm để nối → ') : '') + J.name + (i ? ` · cùng nút với ${i} chốt` : '') + extra;
+  } else if (hover.sw) tip.textContent = `Công tắc POWER ON bo đồng bộ: ${state.svOn ? 'BẬT' : 'TẮT'} · bấm để ${state.svOn ? 'tắt' : 'bật'}`;
+  else if (hover.wire) tip.textContent = `${nm(hover.wire.a)} ↔ ${nm(hover.wire.b)} · chuột phải để rút`;
+  if ((hover.jack || hover.wire || hover.sw) && hover.ev) { const r = canvas.getBoundingClientRect(); tip.style.display = 'block'; tip.style.left = (hover.ev.clientX - r.left + 16) + 'px'; tip.style.top = (hover.ev.clientY - r.top + 16) + 'px'; }
+  ringPend.visible = !!src; if (!src) preview.visible = false;
+  if (src) { ringPend.position.copy(jacks.get(src).pos); ringPend.position.y += .05; ringPend.scale.setScalar(1 + .15 * Math.sin(now / 150)); }
+
+  // chế độ Hướng dẫn: dây "ma" tới kết nối tiếp theo
+  const an = state.sim?.an; let gA = null, gB = null;
+  if (state.mode === 'guide' && an && !an.ok && !an.wrongWires.length && an.missing.length && !state.power) [gA, gB] = an.missing[0];
+  if (gA) { setGhost(gA, gB); ghost.material.opacity = .35 + .25 * Math.sin(now / 200); } else ghost.visible = false;
+  const hs = now < hintUntil, targets = hs ? hint : gA ? [gA, gB] : [];
+  hintRings.forEach((r, i) => { r.visible = !!targets[i] && jacks.has(targets[i]); if (r.visible) { r.position.copy(jacks.get(targets[i]).pos); r.position.y += .05; r.scale.setScalar(1.1 + .35 * Math.sin(now / 120)); } });
+
+  if (src) setBanner(`Đang nối từ ${nm(src)} → ${drag ? 'thả' : 'bấm'} vào chốt đích · Esc huỷ`);
+  else if (state.mode === 'guide' && an && an.wrongWires.length && !state.power) setBanner(`Rút dây sai: ${nm(an.wrongWires[0].a)} ↔ ${nm(an.wrongWires[0].b)}  (chuột phải vào dây đỏ)`, 'bad');
+  else if (gA) setBanner(`Cắm dây: ${nm(gA)}  ↔  ${nm(gB)}`, 'guide');
+  else setBanner('');
+  if (state.flash.size && now > state.flashUntil) { state.flash.clear(); rebuildWires(); }
+}
+
+/* =========================================================================
+   9. MÔ PHỎNG: ĐÈN, ĐỒNG HỒ, DAO ĐỘNG KÝ
+   ========================================================================= */
+const scv = $('scope'), sctx = scv.getContext('2d');
+function chanVal(p, n, t) { const vp = V(p, t); if (vp === null) return null; const vn = wired(n) ? V(n, t) : 0; return vn === null ? null : vp - vn; }
+function drawScope(now) {
+  const W = scv.width, H = scv.height, t = now / 1000;
+  sctx.fillStyle = '#06140f'; sctx.fillRect(0, 0, W, H);
+  sctx.strokeStyle = '#173a2e'; sctx.lineWidth = 1;
+  for (let i = 1; i < 10; i++) { sctx.beginPath(); sctx.moveTo(i * W / 10, 0); sctx.lineTo(i * W / 10, H); sctx.stroke(); }
+  for (let i = 1; i < 8; i++) { sctx.beginPath(); sctx.moveTo(0, i * H / 8); sctx.lineTo(W, i * H / 8); sctx.stroke(); }
+  sctx.strokeStyle = '#2c6b55'; sctx.beginPath(); sctx.moveTo(W / 2, 0); sctx.lineTo(W / 2, H); sctx.moveTo(0, H / 2); sctx.lineTo(W, H / 2); sctx.stroke();
+  const td = +$('td').value / 1000, T = 10 * td, Tt = state.ex.trig ? state.ex.trig(ST) : 0.02;
+  const t0 = Math.floor((t - T) / Tt) * Tt, N = 1500;
+  const chans = [['osc.c1p', 'osc.c1n', +$('v1').value, '#ffd84a', 'CH1'], ['osc.c2p', 'osc.c2n', +$('v2').value, '#3fd2ee', 'CH2']];
+  sctx.font = '600 15px Segoe UI, Arial'; sctx.textBaseline = 'top';
+  chans.forEach(([p, n, vd, col, name], ci) => {
+    let txt = `${name} ${vd}V/div  `;
+    if (!wired(p)) txt += 'chưa nối que đo';
+    else {
+      let sum = 0, mx = -1e9, mn = 1e9, cnt = 0;
+      sctx.strokeStyle = col; sctx.lineWidth = 2; sctx.beginPath();
+      for (let i = 0; i <= N; i++) {
+        const tt = t0 + T * i / N; let v = state.power ? chanVal(p, n, tt) : 0; if (v === null) v = 0; else { sum += v; cnt++; mx = Math.max(mx, v); mn = Math.min(mn, v); }
+        const y = Math.max(-5, Math.min(H + 5, H / 2 - v / vd * (H / 8))); const x = i / N * W; i ? sctx.lineTo(x, y) : sctx.moveTo(x, y);
+      }
+      sctx.stroke();
+      if (!state.power) txt += 'nguồn tắt';
+      else if (!cnt) txt += 'điểm đo không xác định';
+      else txt += `TB ${(sum / cnt).toFixed(1)}V  Vpp ${(mx - mn).toFixed(1)}V` + (wired(n) ? '' : '  (GND chưa kẹp)');
+    }
+    sctx.fillStyle = col; sctx.fillText(txt, 10, 8 + ci * 22);
+  });
+  sctx.fillStyle = '#9fb'; sctx.textAlign = 'right'; sctx.fillText(`${$('td').value} ms/div`, W - 10, H - 24); sctx.textAlign = 'left';
+  if (scopeTex) scopeTex.needsUpdate = true;
+}
+function avgOver(f, t, win, n) { let s = 0, c = 0; for (let i = 0; i < n; i++) { const v = f(t - win * i / n); if (v !== null) { s += v; c++; } } return c ? s / c : null; }
+
+let last = performance.now();
+function simulate(now) {
+  const t = now / 1000, dt = Math.min(.1, (now - last) / 1000); last = now;
+  const rated = state.ex.lampRated || 24;
+  for (const L of lamps) {
+    let target = 0;
+    if (state.power) {
+      let s2 = 0, c = 0;
+      for (let i = 0; i < 40; i++) { const tt = t - i * .0005, a = V(L.A, tt), b = V(L.B, tt); if (a !== null && b !== null) { s2 += (a - b) ** 2; } c++; }
+      target = Math.min(1.2, Math.pow(Math.sqrt(s2 / c) / rated, 0.7));
+    }
+    L.bb += (target - L.bb) * Math.min(1, dt * 18);
+    L.glassM.emissiveIntensity = L.bb * 3.2; L.glassM.opacity = .55 + .35 * Math.min(1, L.bb * 2); L.light.intensity = L.bb * 120;
+  }
+  // vôn kế (giá trị trung bình) & ampe kế
+  let vm = null; if (state.power && wired('m.vP') && wired('m.vN')) vm = avgOver(tt => { const a = V('m.vP', tt), b = V('m.vN', tt); return a === null || b === null ? null : a - b; }, t, .06, 120);
+  let am = null;
+  const an = state.sim.an;
+  if (state.power && an && an.ok && wired('m.aP') && wired('m.aN') && state.ex.load) {
+    const [la, lb] = state.ex.load.map(an.m); const r = state.ex.lampRated || 24;
+    am = avgOver(tt => { const a = V(la, tt), b = V(lb, tt); return a === null || b === null ? null : Math.abs(a - b) / r; }, t, .06, 120);
+  }
+  $('mV').textContent = vm === null ? '—' : vm.toFixed(2) + ' V'; $('mA').textContent = am === null ? '—' : am.toFixed(2) + ' A';
+  for (const n of meterNeedles) {
+    const val = n.kind === 'V' ? (vm || 0) : (am || 0); const tgt = n.a0 + (n.a1 - n.a0) * Math.max(-0.05, Math.min(1.05, val / n.max));
+    n.ang += (tgt - n.ang) * Math.min(1, dt * 6); n.g.rotation.y = -n.ang;
+  }
+  for (const k of knobMeshes) {
+    if (!k.p) continue; const r = { alpha: [0, 180, ST.alphaDeg], f555: [1, 50, ST.f555], finv: [30, 70, ST.finv], duty: [5, 90, ST.duty], q4: [-1.2, 2.2, ST.q4] }[k.p];
+    const nrm = (r[2] - r[0]) / (r[1] - r[0]); k.g.rotation.y = -((-135 + 270 * nrm) * Math.PI / 180);
+  }
+}
+
+/* =========================================================================
+   10. VÒNG LẶP
+   ========================================================================= */
+function resize() { const r = canvas.parentElement.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(canvas.parentElement);
+function frame(now) {
+  if (camAnim) {
+    const k = Math.min(1, (now - camAnim.s) / 650), e = k < .5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
+    camera.position.lerpVectors(camAnim.p0, camAnim.p1, e); controls.target.lerpVectors(camAnim.t0, camAnim.t1, e);
+    if (k >= 1) camAnim = null;
+  }
+  controls.update(); simulate(now); drawScope(now); updateOverlay(now);
+  renderer.render(scene, camera); requestAnimationFrame(frame);
+}
+// toạ độ màn hình của một chốt (dùng cho kiểm thử tự động)
+window.__lab = { jackXY(id) { const r = canvas.getBoundingClientRect(), v = jacks.get(id).pos.clone().project(camera); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; }, swXY() { const r = canvas.getBoundingClientRect(), v = swMeshes[0].getWorldPosition(new THREE.Vector3()).project(camera); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; }, state, focusModule, EX, load: loadExercise, test(ws) { state.wires = ws.map(([a, b], i) => ({ id: 9000 + i, a, b, color: "red" })); rebuildSim(); const an = state.sim.an; return { ok: an.ok, wrong: an.wrongWires.map(w => w.a + "-" + w.b), missing: an.missing.map(c => c.join("-")), merges: an.merges }; } };
+fillSelect(); setMode(state.mode);
+let startId = EX[0].id; try { startId = localStorage.getItem('dtcs3d.cur') || startId; } catch (e) { }
+// #demo=<mã bài>: tự cắm đáp án và bật nguồn (xem mạch mẫu chạy)
+const demo = /demo=([^&]+)/.exec(location.hash);
+if (demo) startId = decodeURIComponent(demo[1]);
+document.querySelectorAll('select').forEach(s => Dropdown.enhance(s, s.dataset.dd === 'rich'));
+loadExercise(startId); resize();
+if (demo) startScr.classList.remove('show'); else openStart();
+if (demo && state.ex.conns) {
+  state.demo = true; state.wires = []; applyAnswer(); state.svOn = true;
+  if (state.ex.load) { const [a, b] = state.ex.load.map(state.sim.an.m); addWire('osc.c1p', a, 'yellow'); addWire('osc.c1n', b, 'black'); }
+  $('power').click();
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
